@@ -22,7 +22,7 @@ require_once 'includes/header.php';
 
     <div class="services-two-col animate-on-scroll">
       <div class="services-free-col">
-        <h3>🕐 Services gratuits</h3>
+        <h3><i class="ph ph-fill ph-clock" style="color:var(--gold);"></i> Services gratuits</h3>
         <?php foreach ($free_services as $s): ?>
         <div class="service-item">
           <div class="service-item-icon"><?= $s['icon'] ?></div>
@@ -37,7 +37,7 @@ require_once 'includes/header.php';
       </div>
 
       <div class="services-paid-col">
-        <h3>💰 Services payants</h3>
+        <h3><i class="ph ph-fill ph-coins" style="color:var(--gold);"></i> Services payants</h3>
         <?php foreach ($paid_services as $s): ?>
         <div class="service-item">
           <div class="service-item-icon"><?= $s['icon'] ?></div>
@@ -60,9 +60,9 @@ require_once 'includes/header.php';
     <div class="apartments-grid">
       <?php foreach ($apartments as $a): ?>
       <div class="apartment-card animate-on-scroll">
-        <div class="apartment-image" style="background-image:linear-gradient(rgba(0,0,0,0.05),rgba(0,0,0,0.3)),url('<?= $a['image'] ?>');">
+        <div class="apartment-image" data-bg="<?= htmlspecialchars($a['image']) ?>" data-gradient="linear-gradient(rgba(0,0,0,0.05),rgba(0,0,0,0.3))">
           <span class="apartment-badge"><?= $a['type'] ?></span>
-          <span class="apartment-price"><?= $a['price'] ?> XOF/nuit</span>
+          <span class="apartment-price"><?= $a['price'] ?> F CFA/nuit</span>
         </div>
         <div class="apartment-body">
           <h3><?= $a['name'] ?></h3>
@@ -71,7 +71,7 @@ require_once 'includes/header.php';
             <span><?= $feat ?></span>
             <?php endforeach; ?>
           </div>
-          <a href="contact.php" class="btn btn-primary">Voir plus →</a>
+          <a href="produit.php?appartement=<?= urlencode(mb_strtolower($a['name'])) ?>" class="btn btn-primary">Voir plus <i class="ph ph-fill ph-arrow-right" aria-hidden="true"></i></a>
         </div>
       </div>
       <?php endforeach; ?>
@@ -84,11 +84,11 @@ require_once 'includes/header.php';
     <div style="max-width:460px;margin:0 auto;" class="animate-on-scroll">
       <div class="apartment-card" style="text-align:center;">
         <div style="padding:28px 20px;">
-          <div style="font-size:2.8rem;margin-bottom:8px;">🚗</div>
+          <img src="images/site-live/services/voiture.png" alt="Location de voiture" style="width:220px;max-width:100%;height:auto;margin:0 auto 16px;border-radius:12px;box-shadow:var(--shadow-md);" loading="lazy" decoding="async">
           <h3>LOCATION DE VOITURE</h3>
           <p style="color:var(--text-light);margin:6px 0 14px;font-size:0.9rem;">Explorez Cotonou et le Bénin en toute liberté</p>
-          <div style="font-weight:700;color:var(--primary);font-size:1.1rem;margin-bottom:16px;">35 000 XOF / jour</div>
-          <a href="contact.php" class="btn btn-gold">Voir plus →</a>
+          <div style="font-weight:700;color:var(--primary);font-size:1.1rem;margin-bottom:16px;"><?= htmlspecialchars($car_rental_price) ?></div>
+          <a href="contact.php" class="btn btn-gold">Voir plus <i class="ph ph-fill ph-arrow-right" aria-hidden="true"></i></a>
         </div>
       </div>
     </div>
