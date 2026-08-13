@@ -71,6 +71,7 @@ require_once 'includes/header.php';
             <span><?= $feat ?></span>
             <?php endforeach; ?>
           </div>
+          <p class="apartment-rental"><i class="ph ph-fill ph-calendar-check" aria-hidden="true"></i> Courte &amp; longue durée</p>
           <a href="produit.php?appartement=<?= urlencode(mb_strtolower($a['name'])) ?>" class="btn btn-primary">Voir plus <i class="ph ph-fill ph-arrow-right" aria-hidden="true"></i></a>
         </div>
       </div>
@@ -81,13 +82,13 @@ require_once 'includes/header.php';
 
 <section class="section" style="padding-top:0;">
   <div class="container">
-    <div style="max-width:460px;margin:0 auto;" class="animate-on-scroll">
-      <div class="apartment-card" style="text-align:center;">
-        <div style="padding:28px 20px;">
-          <img src="images/site-live/services/voiture.png" alt="Location de voiture" style="width:220px;max-width:100%;height:auto;margin:0 auto 16px;border-radius:12px;box-shadow:var(--shadow-md);" loading="lazy" decoding="async">
+    <div class="car-rental-wrap animate-on-scroll">
+      <div class="car-rental-card">
+        <div class="car-rental-body">
+          <img src="images/voiture1.png" alt="Location de voiture" class="car-rental-img" loading="lazy" decoding="async">
           <h3>LOCATION DE VOITURE</h3>
-          <p style="color:var(--text-light);margin:6px 0 14px;font-size:0.9rem;">Explorez Cotonou et le Bénin en toute liberté</p>
-          <div style="font-weight:700;color:var(--primary);font-size:1.1rem;margin-bottom:16px;"><?= htmlspecialchars($car_rental_price) ?></div>
+          <p class="car-rental-desc">Explorez Cotonou et le Bénin en toute liberté</p>
+          <div class="car-rental-price"><?= htmlspecialchars($car_rental_price) ?></div>
           <a href="contact.php" class="btn btn-gold">Voir plus <i class="ph ph-fill ph-arrow-right" aria-hidden="true"></i></a>
         </div>
       </div>

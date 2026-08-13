@@ -3,6 +3,7 @@ require_once 'auth.php';
 admin_require_login();
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/security.php';
 
 $action_msg = '';
 $action_type = '';
@@ -175,6 +176,7 @@ $car_prices = [
             <div class="price-label"><?= htmlspecialchars($row['label']) ?></div>
             <form method="POST" action="actions.php" class="price-form">
               <input type="hidden" name="action" value="price_update">
+              <?= csrf_field() ?>
               <input type="hidden" name="tab" value="prices">
               <input type="hidden" name="section" value="<?= htmlspecialchars($row['section']) ?>">
               <input type="hidden" name="item" value="<?= htmlspecialchars($row['item']) ?>">
@@ -185,6 +187,7 @@ $car_prices = [
             <?php if ($row['custom']): ?>
               <form method="POST" action="actions.php">
                 <input type="hidden" name="action" value="price_reset">
+                <?= csrf_field() ?>
                 <input type="hidden" name="tab" value="prices">
                 <input type="hidden" name="section" value="<?= htmlspecialchars($row['section']) ?>">
                 <input type="hidden" name="item" value="<?= htmlspecialchars($row['item']) ?>">
@@ -209,6 +212,7 @@ $car_prices = [
             <div class="price-label"><?= htmlspecialchars($row['label']) ?></div>
             <form method="POST" action="actions.php" class="price-form">
               <input type="hidden" name="action" value="price_update">
+              <?= csrf_field() ?>
               <input type="hidden" name="tab" value="prices">
               <input type="hidden" name="section" value="<?= htmlspecialchars($row['section']) ?>">
               <input type="hidden" name="item" value="<?= htmlspecialchars($row['item']) ?>">
@@ -218,6 +222,7 @@ $car_prices = [
             <?php if ($row['custom']): ?>
               <form method="POST" action="actions.php">
                 <input type="hidden" name="action" value="price_reset">
+                <?= csrf_field() ?>
                 <input type="hidden" name="tab" value="prices">
                 <input type="hidden" name="section" value="<?= htmlspecialchars($row['section']) ?>">
                 <input type="hidden" name="item" value="<?= htmlspecialchars($row['item']) ?>">
@@ -242,6 +247,7 @@ $car_prices = [
             <div class="price-label"><?= htmlspecialchars($row['label']) ?></div>
             <form method="POST" action="actions.php" class="price-form">
               <input type="hidden" name="action" value="price_update">
+              <?= csrf_field() ?>
               <input type="hidden" name="tab" value="prices">
               <input type="hidden" name="section" value="<?= htmlspecialchars($row['section']) ?>">
               <input type="hidden" name="item" value="<?= htmlspecialchars($row['item']) ?>">
@@ -251,6 +257,7 @@ $car_prices = [
             <?php if ($row['custom']): ?>
               <form method="POST" action="actions.php">
                 <input type="hidden" name="action" value="price_reset">
+                <?= csrf_field() ?>
                 <input type="hidden" name="tab" value="prices">
                 <input type="hidden" name="section" value="<?= htmlspecialchars($row['section']) ?>">
                 <input type="hidden" name="item" value="<?= htmlspecialchars($row['item']) ?>">
@@ -365,6 +372,7 @@ $car_prices = [
 
                 <form id="upload-<?= $fid ?>" method="POST" action="actions.php" enctype="multipart/form-data" style="display:none;">
                   <input type="hidden" name="action" value="upload">
+                  <?= csrf_field() ?>
                   <input type="hidden" name="anchor" value="<?= $ps['id'] ?>">
                   <input type="hidden" name="section" value="<?= $field['section'] ?>">
                   <input type="hidden" name="item" value="<?= htmlspecialchars($field['name']) ?>">
@@ -374,6 +382,7 @@ $car_prices = [
 
                 <form id="edit-<?= $fid ?>" method="POST" action="actions.php" class="edit-form" style="display:none;">
                   <input type="hidden" name="action" value="update">
+                  <?= csrf_field() ?>
                   <input type="hidden" name="anchor" value="<?= $ps['id'] ?>">
                   <input type="hidden" name="section" value="<?= $field['section'] ?>">
                   <input type="hidden" name="item" value="<?= htmlspecialchars($field['name']) ?>">
@@ -405,6 +414,7 @@ $car_prices = [
 
   <form id="action-form" method="POST" action="actions.php" style="display:none;">
     <input type="hidden" name="action" id="action-form-action">
+    <?= csrf_field() ?>
     <input type="hidden" name="section" id="action-form-section">
     <input type="hidden" name="item" id="action-form-item">
     <input type="hidden" name="anchor" id="action-form-anchor">

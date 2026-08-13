@@ -27,7 +27,7 @@
         <div class="footer-map-col">
           <h4>Trouvez-nous sur Google Map</h4>
           <div class="footer-map">
-            <iframe src="https://maps.google.com/maps?q=6.35056,2.371313&amp;t=m&amp;z=16&amp;output=embed&amp;iwloc=near" width="100%" height="100%" style="border:0;" allowfullscreen loading="lazy" title="Résidence Rubis — Fidjrossè, Cotonou"></iframe>
+            <iframe src="https://maps.google.com/maps?q=R%C3%A9sidence%20rubis&amp;t=m&amp;z=16&amp;output=embed&amp;iwloc=near" width="100%" height="100%" style="border:0;" allowfullscreen loading="lazy" title="Résidence Rubis — Fidjrossè, Cotonou"></iframe>
           </div>
         </div>
       </div>
@@ -37,109 +37,49 @@
     </div>
   </footer>
 
-  <div class="cart-float" onclick="window.location.href='nos-appartements.php'" title="Mes réservations">
-    <i class="ph ph-fill ph-shopping-cart" aria-hidden="true"></i>
-    <span class="cart-badge">0</span>
-  </div>
+  <!-- ===== Panier Réservation(s) : bouton flottant + tiroir latéral ===== -->
+  <button type="button" class="res-float" id="resFloat" aria-label="Voir mes réservations" aria-expanded="false">
+    <i class="ph ph-fill ph-shopping-cart-simple" aria-hidden="true"></i>
+    <span class="res-float-label">Réservation(s)</span>
+    <span class="res-float-badge" id="resBadge" hidden>0</span>
+  </button>
+
+  <div class="res-overlay" id="resOverlay" hidden></div>
+
+  <aside class="res-drawer" id="resDrawer" role="dialog" aria-modal="true" aria-label="Vos réservations" aria-hidden="true">
+    <div class="res-drawer-head">
+      <div class="res-drawer-title">
+        <i class="ph ph-fill ph-shopping-cart-simple" aria-hidden="true"></i>
+        <span>Réservation(s)</span>
+      </div>
+      <button type="button" class="res-drawer-close" id="resClose" aria-label="Fermer"><i class="ph ph-fill ph-x" aria-hidden="true"></i></button>
+    </div>
+
+    <div class="res-drawer-body">
+      <div class="res-drawer-empty" id="resEmpty">
+        <span class="res-drawer-empty-icon"><i class="ph ph-fill ph-basket" aria-hidden="true"></i></span>
+        <p>Vous n'avez aucune réservation enregistrée pour le moment.</p>
+        <a href="nos-appartements.php" class="btn btn-primary">Effectuer une réservation maintenant</a>
+        <button type="button" class="res-drawer-continue" id="resContinue">Continuer à réserver</button>
+      </div>
+      <ul class="res-drawer-list" id="resList"></ul>
+    </div>
+
+    <div class="res-drawer-foot" id="resFoot" hidden>
+      <input type="hidden" name="csrf_token" value="<?= function_exists('csrf_token') ? csrf_token() : '' ?>">
+      <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" class="hp-field">
+      <div class="res-drawer-total">
+        <span>Total estimé</span>
+        <strong id="resTotal">0 F</strong>
+      </div>
+      <label class="res-drawer-email-label" for="resEmail">Votre email</label>
+      <input type="email" id="resEmail" placeholder="votre@email.com" autocomplete="email">
+      <div class="res-drawer-alert" id="resAlert" role="status" hidden></div>
+      <button type="button" class="res-drawer-submit" id="resSubmit"><i class="ph ph-fill ph-paper-plane-right" aria-hidden="true"></i> Envoyer ma demande</button>
+    </div>
+  </aside>
 
   <script src="js/main.js?v=<?= filemtime(__DIR__ . '/../js/main.js') ?>"></script>
 
-  <div class="login-modal-overlay" id="login-modal">
-    <div class="login-modal">
-      <button type="button" class="login-modal-close" id="loginModalClose" aria-label="Fermer">&times;</button>
-      <div class="login-modal-header">
-        <img src="<?= htmlspecialchars($logo_image) ?>" alt="<?= $site_name ?>" class="login-modal-logo">
-        <h2>Bienvenue</h2>
-        <p>Connectez-vous ou créez un compte</p>
-      </div>
-      <div class="login-tabs">
-        <button type="button" class="login-tab active" data-tab="login">Se connecter</button>
-        <button type="button" class="login-tab" data-tab="register">S'inscrire</button>
-      </div>
-      <form class="login-form" id="loginForm" style="display:block;">
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" name="email" placeholder="votre@email.com" required>
-        </div>
-        <div class="form-group">
-          <label>Mot de passe</label>
-          <input type="password" name="password" placeholder="••••••••" required>
-        </div>
-        <div class="login-options">
-          <label class="login-remember">
-            <input type="checkbox" name="remember"> Se souvenir de moi
-          </label>
-          <a href="#" class="login-forgot">Mot de passe oublié</a>
-        </div>
-        <button type="submit" class="btn btn-primary btn-full">Se connecter</button>
-      </form>
-      <form class="login-form" id="registerForm" style="display:none;">
-        <div class="form-group">
-          <label>Nom complet</label>
-          <input type="text" name="name" placeholder="Votre nom" required>
-        </div>
-        <div class="form-group">
-          <label>Email</label>
-          <input type="email" name="email" placeholder="votre@email.com" required>
-        </div>
-        <div class="form-group">
-          <label>Mot de passe</label>
-          <input type="password" name="password" placeholder="••••••••" required>
-        </div>
-        <div class="form-group">
-          <label>Confirmer le mot de passe</label>
-          <input type="password" name="password_confirm" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="btn btn-primary btn-full">Créer mon compte</button>
-      </form>
-    </div>
-  </div>
-
-  <script>
-  (function(){
-    var modal = document.getElementById('login-modal');
-    var closeBtn = document.getElementById('loginModalClose');
-    var loginBtn = document.getElementById('navLoginBtn');
-    var tabs = document.querySelectorAll('.login-tab');
-    var loginForm = document.getElementById('loginForm');
-    var registerForm = document.getElementById('registerForm');
-
-    if (loginBtn) {
-      loginBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        modal.classList.add('open');
-        document.body.style.overflow = 'hidden';
-      });
-    }
-
-    if (closeBtn) {
-      closeBtn.addEventListener('click', function() {
-        modal.classList.remove('open');
-        document.body.style.overflow = '';
-      });
-    }
-
-    modal.addEventListener('click', function(e) {
-      if (e.target === modal) {
-        modal.classList.remove('open');
-        document.body.style.overflow = '';
-      }
-    });
-
-    tabs.forEach(function(tab) {
-      tab.addEventListener('click', function() {
-        tabs.forEach(function(t) { t.classList.remove('active'); });
-        tab.classList.add('active');
-        if (tab.dataset.tab === 'login') {
-          loginForm.style.display = 'block';
-          registerForm.style.display = 'none';
-        } else {
-          loginForm.style.display = 'none';
-          registerForm.style.display = 'block';
-        }
-      });
-    });
-  })();
-  </script>
 </body>
 </html>

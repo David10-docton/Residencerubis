@@ -107,6 +107,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  const heroScrollHint = document.querySelector('.hero-scroll-hint');
+  if (heroScrollHint) {
+    heroScrollHint.addEventListener('click', () => {
+      const nextSection = document.querySelector('main > section:nth-of-type(2)') || document.querySelector('.info-banner');
+      if (nextSection) nextSection.scrollIntoView({ behavior: 'smooth' });
+    });
+  }
+
   const hero = document.querySelector('.hero');
   if (hero) {
     window.addEventListener('mousemove', (e) => {
@@ -115,6 +123,22 @@ document.addEventListener('DOMContentLoaded', () => {
       hero.style.setProperty('--x', x + 'px');
       hero.style.setProperty('--y', y + 'px');
     });
+  }
+
+  // Anneau de satisfaction (page À propos) : animation déclenchée à l'apparition
+  const aboutRing = document.querySelector('.about-ring');
+  if (aboutRing && 'IntersectionObserver' in window) {
+    const ringObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          aboutRing.classList.add('in-view');
+          ringObserver.unobserve(aboutRing);
+        }
+      });
+    }, { threshold: 0.5 });
+    ringObserver.observe(aboutRing);
+  } else if (aboutRing) {
+    aboutRing.classList.add('in-view');
   }
 
   const stats = document.querySelectorAll('.stat-number');
@@ -314,33 +338,341 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  const iconFallbackMap = [
-    [/wifi/i, 'ph-wifi-high'],
-    [/veilleur/i, 'ph-shield-check'],
-    [/parking/i, 'ph-car-simple'],
-    [/s[èe]che/i, 'ph-wind'],
-    [/table/i, 'ph-table'],
-    [/fer/i, 'ph-iron'],
-    [/m[ée]nage/i, 'ph-spray-bottle'],
-    [/dressage/i, 'ph-bed'],
-    [/nettoyage/i, 'ph-washing-machine'],
-    [/repassage/i, 'ph-arrows-vertical'],
-    [/jeu de lit/i, 'ph-bed'],
-    [/poussette/i, 'ph-baby'],
-    [/voiture/i, 'ph-car-simple']
-  ];
-  document.querySelectorAll('.service-item-icon img').forEach((img) => {
-    img.addEventListener('error', () => {
-      const alt = img.getAttribute('alt') || '';
-      let cls = 'ph-question';
-      for (const [re, icon] of iconFallbackMap) {
-        if (re.test(alt)) { cls = icon; break; }
-      }
-      const icon = document.createElement('i');
-      icon.className = 'ph ph-fill ' + cls;
-      icon.setAttribute('aria-hidden', 'true');
-      img.replaceWith(icon);
+  /* ===== LIGHTBOX : galerie photos de la fiche produit ===== */
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = lightbox ? lightbox.querySelector('img') : null;
+  const lightboxCaption = lightbox ? lightbox.querySelector('.lightbox-caption') : null;
+
+  if (lightbox && lightboxImg) {
+    // Toutes les photos de la galerie (grande image + vignettes)
+    const gallerySources = [];
+    if (produitMain) gallerySources.push({ src: produitMain.src, alt: produitMain.alt });
+    produitThumbs.forEach(thumb => {
+      gallerySources.push({ src: thumb.src, alt: thumb.alt });
     });
-  });
+
+    const hasMultiple = gallerySources.length > 1;
+    let currentIndex = 0;
+    const prevBtn = lightbox.querySelector('.lightbox-prev');
+    const nextBtn = lightbox.querySelector('.lightbox-next');
+    const closeBtn = lightbox.querySelector('.lightbox-close');
+    let lastFocused = null;
+
+    function showLightbox(i) {
+      currentIndex = (i + gallerySources.length) % gallerySources.length;
+      lightboxImg.src = gallerySources[currentIndex].src;
+      lightboxImg.alt = gallerySources[currentIndex].alt;
+      if (lightboxCaption) {
+        lightboxCaption.textContent = gallerySources[currentIndex].alt || '';
+      }
+      if (prevBtn) prevBtn.classList.toggle('is-hidden', !hasMultiple);
+      if (nextBtn) nextBtn.classList.toggle('is-hidden', !hasMultiple);
+    }
+
+    function openLightbox(i) {
+      lastFocused = document.activeElement;
+      showLightbox(i);
+      lightbox.classList.add('open');
+      lightbox.setAttribute('aria-hidden', 'false');
+      document.body.style.overflow = 'hidden';
+      if (closeBtn) closeBtn.focus();
+    }
+
+    function closeLightbox() {
+      lightbox.classList.remove('open');
+      lightbox.setAttribute('aria-hidden', 'true');
+      document.body.style.overflow = '';
+      if (lastFocused) lastFocused.focus();
+    }
+
+    const zoomBtn = document.querySelector('.produit-zoom');
+    if (zoomBtn) {
+      zoomBtn.addEventListener('click', () => openLightbox(0));
+    }
+    if (produitMain) {
+      produitMain.addEventListener('click', () => openLightbox(0));
+    }
+    produitThumbs.forEach((thumb, idx) => {
+      thumb.addEventListener('click', () => openLightbox(idx + 1));
+    });
+
+    if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
+    if (prevBtn) prevBtn.addEventListener('click', (e) => { e.stopPropagation(); showLightbox(currentIndex - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); showLightbox(currentIndex + 1); });
+
+    lightbox.addEventListener('click', (e) => {
+      if (e.target === lightbox) closeLightbox();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (!lightbox.classList.contains('open')) return;
+      if (e.key === 'Escape') closeLightbox();
+      if (e.key === 'ArrowLeft') { e.preventDefault(); showLightbox(currentIndex - 1); }
+      if (e.key === 'ArrowRight') { e.preventDefault(); showLightbox(currentIndex + 1); }
+    });
+  }
+
+  /* ============================================================
+   * Calcul du prix en temps réel (fiche produit)
+   * ============================================================ */
+  const bookingForm = document.querySelector('.produit-booking[data-price]');
+
+  function fmtF(n) {
+    return Number(n).toLocaleString('fr-FR').replace(/[\u202f\u00a0]/g, ' ');
+  }
+
+  if (bookingForm) {
+    const calc = document.getElementById('produitPriceCalc');
+    const detailEl = document.getElementById('priceCalcDetail');
+    const eurEl = document.getElementById('priceCalcEur');
+    const totalEl = document.getElementById('priceCalcTotal');
+    const dateSelects = bookingForm.querySelectorAll('select[name^="debut_"], select[name^="fin_"]');
+
+    function updatePrice() {
+      const v = {};
+      let complete = true;
+      dateSelects.forEach(s => {
+        if (!s.value) complete = false;
+        v[s.name] = parseInt(s.value, 10) || 0;
+      });
+      if (!complete) {
+        if (calc) calc.classList.remove('is-visible');
+        return;
+      }
+      const checkIn = new Date(v.debut_annee, v.debut_mois - 1, v.debut_jour);
+      const checkOut = new Date(v.fin_annee, v.fin_mois - 1, v.fin_jour);
+      const valid = checkIn.getDate() === v.debut_jour && checkIn.getMonth() === v.debut_mois - 1
+        && checkOut.getDate() === v.fin_jour && checkOut.getMonth() === v.fin_mois - 1;
+      if (!valid || checkOut <= checkIn) {
+        if (calc) calc.classList.remove('is-visible');
+        return;
+      }
+      const nights = Math.round((checkOut - checkIn) / 86400000);
+      const price = parseInt(bookingForm.dataset.price, 10) || 0;
+      const eur = parseInt(bookingForm.dataset.priceEur, 10) || 0;
+      detailEl.textContent = nights + ' nuit' + (nights > 1 ? 's' : '') + ' × ' + bookingForm.dataset.priceLabel;
+      eurEl.textContent = '≈ ' + fmtF(nights * eur) + ' €';
+      totalEl.textContent = fmtF(nights * price) + ' F';
+      calc.classList.add('is-visible');
+    }
+
+    dateSelects.forEach(s => s.addEventListener('change', updatePrice));
+  }
+
+  /* ============================================================
+   * Tiroir « Réservation(s) » — panier de réservation
+   * ============================================================ */
+  const CART_KEY = 'rubis_reservations_v1';
+  const resFloat = document.getElementById('resFloat');
+  const resDrawer = document.getElementById('resDrawer');
+  const resOverlay = document.getElementById('resOverlay');
+  const resClose = document.getElementById('resClose');
+  const resContinue = document.getElementById('resContinue');
+  const resBadge = document.getElementById('resBadge');
+  const resEmpty = document.getElementById('resEmpty');
+  const resList = document.getElementById('resList');
+  const resFoot = document.getElementById('resFoot');
+  const resTotal = document.getElementById('resTotal');
+  const resEmail = document.getElementById('resEmail');
+  const resAlert = document.getElementById('resAlert');
+  const resSubmit = document.getElementById('resSubmit');
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function readCart() {
+    try {
+      const data = JSON.parse(localStorage.getItem(CART_KEY) || '[]');
+      return Array.isArray(data) ? data : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveCart(items) {
+    try { localStorage.setItem(CART_KEY, JSON.stringify(items)); } catch (e) { /* stockage indisponible */ }
+  }
+
+  function cartTotal(items) {
+    return items.reduce((sum, it) => sum + ((it.nights || 0) * (it.price || 0)), 0);
+  }
+
+  function fmtDate(iso) {
+    const p = String(iso).split('-');
+    return (p[2] || '') + '/' + (p[1] || '') + '/' + (p[0] || '');
+  }
+
+  function flashBadge() {
+    if (!resBadge) return;
+    resBadge.classList.remove('pop');
+    void resBadge.offsetWidth;
+    resBadge.classList.add('pop');
+  }
+
+  function renderCart() {
+    if (!resDrawer) return;
+    const items = readCart();
+    const count = items.length;
+    if (resBadge) {
+      resBadge.textContent = count;
+      resBadge.hidden = count === 0;
+    }
+    if (count === 0) {
+      resEmpty.hidden = false;
+      resList.innerHTML = '';
+      resFoot.hidden = true;
+      return;
+    }
+    resEmpty.hidden = true;
+    resFoot.hidden = false;
+    resTotal.textContent = fmtF(cartTotal(items)) + ' F';
+    resList.innerHTML = items.map((it, idx) =>
+      '<li class="res-drawer-item">' +
+        (it.image ? '<img src="' + esc(it.image) + '" alt="" loading="lazy">' : '<span class="res-drawer-item-ph"></span>') +
+        '<div class="res-drawer-item-info">' +
+          '<strong>' + esc(it.name) + '</strong>' +
+          '<span>' + esc(fmtDate(it.checkIn)) + ' → ' + esc(fmtDate(it.checkOut)) + ' · ' + Number(it.nights || 0) + ' nuit' + (Number(it.nights || 0) > 1 ? 's' : '') + '</span>' +
+          '<em>' + fmtF((it.nights || 0) * (it.price || 0)) + ' F</em>' +
+        '</div>' +
+        '<button type="button" class="res-drawer-remove" data-idx="' + idx + '" aria-label="Retirer ' + esc(it.name) + '"><i class="ph ph-fill ph-trash" aria-hidden="true"></i></button>' +
+      '</li>'
+    ).join('');
+    resList.querySelectorAll('.res-drawer-remove').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const items = readCart();
+        items.splice(parseInt(btn.dataset.idx, 10), 1);
+        saveCart(items);
+        renderCart();
+        flashBadge();
+      });
+    });
+  }
+
+  function openDrawer() {
+    if (!resDrawer) return;
+    resDrawer.classList.add('open');
+    resOverlay.hidden = false;
+    requestAnimationFrame(() => resOverlay.classList.add('show'));
+    resDrawer.setAttribute('aria-hidden', 'false');
+    resFloat.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+    const firstFocus = resDrawer.querySelector('.res-drawer-close');
+    if (firstFocus) firstFocus.focus();
+  }
+
+  function closeDrawer() {
+    if (!resDrawer) return;
+    resDrawer.classList.remove('open');
+    resOverlay.classList.remove('show');
+    window.setTimeout(() => { resOverlay.hidden = true; }, 300);
+    resDrawer.setAttribute('aria-hidden', 'true');
+    resFloat.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+    resFloat.focus();
+  }
+
+  if (resFloat) {
+    resFloat.addEventListener('click', () => {
+      if (resDrawer.classList.contains('open')) closeDrawer();
+      else openDrawer();
+    });
+    if (resClose) resClose.addEventListener('click', closeDrawer);
+    if (resOverlay) resOverlay.addEventListener('click', closeDrawer);
+    if (resContinue) resContinue.addEventListener('click', closeDrawer);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && resDrawer.classList.contains('open')) closeDrawer();
+    });
+
+    // À la soumission du formulaire de réservation : on enregistre la réservation
+    // dans le panier (localStorage) avant l'envoi serveur classique.
+    if (bookingForm) {
+      bookingForm.addEventListener('submit', () => {
+        const g = (n) => parseInt((bookingForm.querySelector('select[name="' + n + '"]') || {}).value, 10) || 0;
+        const checkIn = new Date(g('debut_annee'), g('debut_mois') - 1, g('debut_jour'));
+        const checkOut = new Date(g('fin_annee'), g('fin_mois') - 1, g('fin_jour'));
+        const emailInput = bookingForm.querySelector('input[name="email"]');
+        const email = emailInput ? emailInput.value.trim() : '';
+        const datesOk = checkIn.getDate() === g('debut_jour') && checkIn.getMonth() === g('debut_mois') - 1
+          && checkOut.getDate() === g('fin_jour') && checkOut.getMonth() === g('fin_mois') - 1;
+        // On n'enregistre dans le panier que si la demande sera réellement acceptée
+        // par le serveur (mêmes validations qu'en PHP : dates réelles + email).
+        if (!datesOk || checkOut <= checkIn || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+        const nights = Math.round((checkOut - checkIn) / 86400000);
+        const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        const items = readCart();
+        const entry = {
+          name: bookingForm.dataset.apartment || '',
+          image: bookingForm.dataset.image || '',
+          checkIn: iso(checkIn),
+          checkOut: iso(checkOut),
+          nights: nights,
+          price: parseInt(bookingForm.dataset.price, 10) || 0
+        };
+        const dup = items.findIndex(it => it.name === entry.name && it.checkIn === entry.checkIn && it.checkOut === entry.checkOut);
+        if (dup >= 0) items.splice(dup, 1);
+        items.push(entry);
+        saveCart(items);
+        flashBadge();
+      });
+    }
+
+    // Envoi de la demande groupée (AJAX vers contact.php)
+    if (resSubmit) {
+      resSubmit.addEventListener('click', async () => {
+        const email = resEmail.value.trim();
+        const items = readCart();
+        const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        if (!emailOk) {
+          resAlert.textContent = 'Veuillez saisir une adresse email valide.';
+          resAlert.className = 'res-drawer-alert err';
+          resAlert.hidden = false;
+          resEmail.focus();
+          return;
+        }
+        if (items.length === 0) {
+          resAlert.textContent = 'Votre sélection est vide.';
+          resAlert.className = 'res-drawer-alert err';
+          resAlert.hidden = false;
+          return;
+        }
+        resSubmit.disabled = true;
+        const csrfInput = resDrawer.querySelector('input[name="csrf_token"]');
+        const fd = new FormData();
+        fd.append('panier_submit', '1');
+        fd.append('csrf_token', csrfInput ? csrfInput.value : '');
+        fd.append('website', '');
+        fd.append('email', email);
+        fd.append('items', JSON.stringify(items));
+        try {
+          const resp = await fetch('contact.php', {
+            method: 'POST',
+            headers: { 'Accept': 'application/json' },
+            body: fd
+          });
+          const data = await resp.json();
+          resAlert.textContent = data.message || 'Une erreur est survenue.';
+          resAlert.className = 'res-drawer-alert ' + (data.ok ? 'ok' : 'err');
+          resAlert.hidden = false;
+          if (data.ok) {
+            saveCart([]);
+            renderCart();
+            resEmail.value = '';
+            const p = resEmpty.querySelector('p');
+            const defaultText = p.textContent;
+            p.textContent = data.message;
+            window.setTimeout(() => { p.textContent = defaultText; }, 9000);
+          }
+        } catch (err) {
+          resAlert.textContent = 'Une erreur est survenue. Veuillez réessayer.';
+          resAlert.className = 'res-drawer-alert err';
+          resAlert.hidden = false;
+        }
+        resSubmit.disabled = false;
+      });
+    }
+
+    renderCart();
+  }
 
 });

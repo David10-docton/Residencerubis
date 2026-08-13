@@ -51,7 +51,7 @@ require_once 'includes/header.php';
     <div class="section-header animate-on-scroll">
       <span class="section-tag">À la Résidence Rubis</span>
       <h2>Choisissez votre <span>appartement</span></h2>
-      <p><?= $search_query !== '' ? 'Résultats de la recherche pour « ' . htmlspecialchars($search_query) . ' »' : 'Location en courte et longue durée. Les tarifs indiqués ne comprennent pas l\'électricité : elle est à la charge du locataire.' ?></p>
+      <p><?= $search_query !== '' ? 'Résultats de la recherche pour « ' . htmlspecialchars($search_query) . ' »' : 'Location en courte et longue durée.' ?></p>
     </div>
     <?php if (empty($search_results)): ?>
       <div style="text-align:center;padding:40px 0;">
@@ -74,6 +74,7 @@ require_once 'includes/header.php';
             <span><?= $feat ?></span>
             <?php endforeach; ?>
           </div>
+          <p class="apartment-rental"><i class="ph ph-fill ph-calendar-check" aria-hidden="true"></i> Courte &amp; longue durée</p>
           <a href="produit.php?appartement=<?= urlencode(mb_strtolower($a['name'])) ?>" class="btn btn-primary"><i class="ph ph-fill ph-calendar-check" aria-hidden="true"></i> Voir plus</a>
         </div>
       </div>

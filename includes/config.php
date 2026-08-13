@@ -1,12 +1,12 @@
 <?php
 $site_name = "Résidence Rubis";
 $site_tagline = "Vous êtes ici chez vous";
-$site_email = "residencerubis26@gmail.com";
+$site_email = "contact@residencerubis.com";
 $site_phone = "(+229) 01 96 77 13 13";
 $site_address = "Cotonou, Bénin";
 $site_hours = "Lun - Sam : 9h00 - 13h00 & 14h00 - 18h00";
 $rental_type = "Courte et longue durée";
-$electricity_note = "Électricité non comprise, à la charge du locataire.";
+$electricity_note = "Électricité non comprise (à la charge du locataire).";
 $current_year = date("Y");
 $logo_image = "images/logo.png";
 $car_rental_price = "35 000 XOF / jour";
@@ -22,7 +22,7 @@ $nav_links = [
 
 $apartments = [
   [
-    "name" => "ANAIS", "type" => "T2", "price" => "24 803", "price_eur" => "38",
+    "name" => "ANAIS", "type" => "T2", "price" => "20 500", "price_eur" => "31",
     "surface" => "66 m²", "rooms" => "1 chambre – salon",
     "gallery" => "images/site-live/appartements/ANAIS",
     "image" => "images/residence/anais.jpg",
@@ -30,7 +30,7 @@ $apartments = [
     "description" => "Appartement 2 pièces avec vue sur mer"
   ],
   [
-    "name" => "LAURA", "type" => "T2", "price" => "24 803", "price_eur" => "38",
+    "name" => "LAURA", "type" => "T2", "price" => "20 500", "price_eur" => "31",
     "surface" => "66 m²", "rooms" => "1 chambre – salon",
     "gallery" => "images/site-live/appartements/LAURA",
     "image" => "images/residence/laura.jpg",
@@ -38,7 +38,7 @@ $apartments = [
     "description" => "Appartement 2 pièces avec vue sur mer"
   ],
   [
-    "name" => "LYS", "type" => "T2", "price" => "24 803", "price_eur" => "38",
+    "name" => "LYS", "type" => "T2", "price" => "20 500", "price_eur" => "31",
     "surface" => "66 m²", "rooms" => "1 chambre – salon",
     "gallery" => "images/site-live/appartements/LYS",
     "image" => "images/residence/lys.jpg",
@@ -46,7 +46,7 @@ $apartments = [
     "description" => "Appartement 2 pièces avec vue sur mer"
   ],
   [
-    "name" => "OCCITANIE", "type" => "T2", "price" => "24 803", "price_eur" => "38",
+    "name" => "OCCITANIE", "type" => "T2", "price" => "20 500", "price_eur" => "31",
     "surface" => "66 m²", "rooms" => "1 chambre – salon",
     "gallery" => "images/site-live/appartements/OCCITANIE",
     "image" => "images/residence/occitanie.jpg",
@@ -54,7 +54,7 @@ $apartments = [
     "description" => "Appartement 2 pièces avec vue sur mer"
   ],
   [
-    "name" => "JASMAIN", "type" => "T3", "price" => "29 514", "price_eur" => "45",
+    "name" => "JASMAIN", "type" => "T3", "price" => "30 000", "price_eur" => "46",
     "surface" => "106 m²", "rooms" => "2 chambres – salon",
     "gallery" => "images/site-live/appartements/JASMAIN",
     "image" => "images/residence/jasmain.jpg",
@@ -62,7 +62,7 @@ $apartments = [
     "description" => "Appartement 3 pièces spacieux avec vue sur mer"
   ],
   [
-    "name" => "HORTENSIA", "type" => "T3", "price" => "29 514", "price_eur" => "45",
+    "name" => "HORTENSIA", "type" => "T3", "price" => "30 000", "price_eur" => "46",
     "surface" => "106 m²", "rooms" => "2 chambres – salon",
     "gallery" => "images/site-live/appartements/HORTENCIA",
     "image" => "images/residence/hortensia.jpg",
@@ -72,25 +72,25 @@ $apartments = [
 ];
 
 $free_services = [
-  ["icon" => '<img src="images/site-live/services/wifi-sm.png" alt="WiFi">', "name" => "WiFi"],
-  ["icon" => '<img src="images/site-live/services/veilleur-sm.png" alt="Veilleur de Nuit">', "name" => "Veilleur de Nuit"],
-  ["icon" => '<img src="images/site-live/services/parking-sm.png" alt="Parking Extérieur">', "name" => "Parking Extérieur"],
-  ["icon" => '<img src="images/site-live/services/seche-cheveux-sm.png" alt="Sèche cheveux">', "name" => "Sèche cheveux", "hint" => "à la demande"],
-  ["icon" => '<img src="images/site-live/services/table-repassage-sm.png" alt="Table de repassage">', "name" => "Table de repassage", "hint" => "à la demande"],
-  ["icon" => '<img src="images/site-live/services/fer-repasser-sm.png" alt="Fer à repasser">', "name" => "Fer à repasser", "hint" => "à la demande"],
+  ["icon" => '<i class="ph ph-fill ph-wifi-high"></i>', "name" => "WiFi"],
+  ["icon" => '<i class="ph ph-fill ph-shield-check"></i>', "name" => "Veilleur de Nuit"],
+  ["icon" => '<i class="ph ph-fill ph-car-simple"></i>', "name" => "Parking Extérieur"],
+  ["icon" => '<i class="ph ph-fill ph-hair-dryer"></i>', "name" => "Sèche cheveux", "hint" => "à la demande"],
+  ["icon" => '<i class="ph ph-fill ph-table"></i>', "name" => "Table de repassage", "hint" => "à la demande"],
+  ["icon" => '<i class="ph ph-fill ph-shirt-folded"></i>', "name" => "Fer à repasser", "hint" => "à la demande"],
 ];
 
 $paid_services = [
-  ["icon" => '<img src="images/site-live/services/menage-cuisine-sm.png" alt="Ménage cuisine">', "name" => "Ménage cuisine", "price" => "8 000 XOF"],
-  ["icon" => '<img src="images/site-live/services/menage-t2-sm.png" alt="Ménage T2 complet">', "name" => "Ménage T2 complet", "price" => "12 000 XOF"],
-  ["icon" => '<img src="images/site-live/services/menage-t3-sm.png" alt="Ménage T3 complet">', "name" => "Ménage T3 complet", "price" => "15 000 XOF"],
-  ["icon" => '<img src="images/site-live/services/dressage-lit-sm.png" alt="Dressage de lit simple">', "name" => "Dressage de lit simple", "price" => "2 500 XOF"],
-  ["icon" => '<img src="images/site-live/services/nettoyage-linge-sm.png" alt="Nettoyage Linge de maison">', "name" => "Nettoyage Linge de maison", "price" => "5 000 XOF"],
-  ["icon" => '<img src="images/site-live/services/repassage-linge-sm.png" alt="Repassage Linge de maison">', "name" => "Repassage Linge de maison", "price" => "1 200 XOF/h"],
-  ["icon" => '<img src="images/site-live/services/jeu-lit-sm.png" alt="Jeu de Lit supplémentaire">', "name" => "Jeu de Lit supplémentaire", "price" => "5 000 XOF"],
-  ["icon" => '<img src="images/site-live/services/poussette-sm.png" alt="Poussette bébé">', "name" => "Poussette bébé", "price" => "1 500 XOF/jour"],
+  ["icon" => '<i class="ph ph-fill ph-bowl-steam"></i>', "name" => "Ménage cuisine", "price" => "8 000 XOF"],
+  ["icon" => '<i class="ph ph-fill ph-spray-bottle"></i>', "name" => "Ménage T2 complet", "price" => "12 000 XOF"],
+  ["icon" => '<i class="ph ph-fill ph-spray-bottle"></i>', "name" => "Ménage T3 complet", "price" => "15 000 XOF"],
+  ["icon" => '<i class="ph ph-fill ph-bed"></i>', "name" => "Dressage de lit simple", "price" => "2 500 XOF"],
+  ["icon" => '<i class="ph ph-fill ph-washing-machine"></i>', "name" => "Nettoyage Linge de maison", "price" => "5 000 XOF"],
+  ["icon" => '<i class="ph ph-fill ph-shirt-folded"></i>', "name" => "Repassage Linge de maison", "price" => "1 200 XOF/h"],
+  ["icon" => '<i class="ph ph-fill ph-bed"></i>', "name" => "Jeu de Lit supplémentaire", "price" => "5 000 XOF"],
+  ["icon" => '<i class="ph ph-fill ph-baby-carriage"></i>', "name" => "Poussette bébé", "price" => "1 500 XOF/jour"],
   ["icon" => '<i class="ph ph-fill ph-airplane-takeoff"></i>', "name" => "Transfert Aéroport", "price" => "Sur devis"],
-  ["icon" => '<img src="images/site-live/services/voiture-sm.png" alt="Location de voiture">', "name" => "Location de voiture", "price" => "35 000 XOF/jour"],
+  ["icon" => '<i class="ph ph-fill ph-car-simple"></i>', "name" => "Location de voiture", "price" => "35 000 XOF/jour"],
 ];
 
 $testimonials = [
@@ -114,7 +114,7 @@ $testimonials = [
 $team = [
   ["name" => "LADY", "role" => "Designer Intérieure", "image" => "images/site-live/about/lady.jpg"],
   ["name" => "Désiré A.", "role" => "CEO", "image" => "images/site-live/about/desire.jpg"],
-  ["name" => "Équipe Ménage", "role" => "Propreté & Confort", "icon" => "cleaning", "image" => "images/site-live/team/cleaning.jpg"],
+  ["name" => "Équipe Ménage", "role" => "Propreté & Confort", "icon" => "cleaning", "image" => "images/menage.jpg"],
   ["name" => "Sécurité", "role" => "Veilleur de nuit", "icon" => "security", "image" => "images/Agent.jpg"],
 ];
 
@@ -201,52 +201,57 @@ $benin_monuments = [
 
 if (file_exists(__DIR__ . '/db.php')) {
   require_once __DIR__ . '/db.php';
-  if (function_exists('db_connect')) {
-    foreach ($apartments as &$a) {
-      $override = db_get_image('apartment', $a['name']);
-      if ($override && db_image_path_exists($override)) $a['image'] = $override;
-      $price = db_get_price('apartment', $a['name']);
-      if ($price) $a['price'] = $price;
-    }
-    unset($a);
+  if (function_exists('db_get_overrides')) {
+    // Les surcharges (photos + prix) sont lues depuis un cache JSON,
+    // rafraîchi par la base au plus toutes les 10 min ou après une
+    // modification depuis l'admin (invalidation). Aucune requête MySQL
+    // n'est nécessaire à chaque chargement de page.
+    $overrides = db_get_overrides();
 
-    foreach ($paid_services as &$s) {
-      $price = db_get_price('service', $s['name']);
-      if ($price) $s['price'] = $price;
-    }
-    unset($s);
+    if (is_array($overrides)) {
+      $img = $overrides['images'];
+      $price = $overrides['prices'];
 
-    foreach ($testimonials as &$t) {
-      $override = db_get_image('testimonial', $t['author']);
-      if ($override && db_image_path_exists($override)) $t['image'] = $override;
-    }
-    unset($t);
-
-    foreach ($team as &$m) {
-      if (!empty($m['name'])) {
-        $override = db_get_image('team', $m['name']);
-        if ($override && db_image_path_exists($override)) $m['image'] = $override;
+      foreach ($apartments as &$a) {
+        $key = 'apartment::' . $a['name'];
+        if (!empty($img[$key]) && db_image_path_exists($img[$key])) $a['image'] = $img[$key];
+        if (!empty($price[$key])) $a['price'] = $price[$key];
       }
-    }
-    unset($m);
+      unset($a);
 
-    $about_override = db_get_image('page', 'about');
-    if ($about_override && db_image_path_exists($about_override)) $about_image = $about_override;
-    $benin_override = db_get_image('page', 'benin');
-    if ($benin_override && db_image_path_exists($benin_override)) $benin_image = $benin_override;
-
-    foreach ($benin_monuments as &$m) {
-      foreach ($m['images'] as $i => $img) {
-        $override = db_get_image('monument', $m['key'] . '-' . ($i + 1));
-        if ($override && db_image_path_exists($override)) $m['images'][$i] = $override;
+      foreach ($paid_services as &$s) {
+        $key = 'service::' . $s['name'];
+        if (!empty($price[$key])) $s['price'] = $price[$key];
       }
+      unset($s);
+
+      foreach ($testimonials as &$t) {
+        $key = 'testimonial::' . $t['author'];
+        if (!empty($img[$key]) && db_image_path_exists($img[$key])) $t['image'] = $img[$key];
+      }
+      unset($t);
+
+      foreach ($team as &$m) {
+        if (!empty($m['name'])) {
+          $key = 'team::' . $m['name'];
+          if (!empty($img[$key]) && db_image_path_exists($img[$key])) $m['image'] = $img[$key];
+        }
+      }
+      unset($m);
+
+      if (!empty($img['page::about']) && db_image_path_exists($img['page::about'])) $about_image = $img['page::about'];
+      if (!empty($img['page::benin']) && db_image_path_exists($img['page::benin'])) $benin_image = $img['page::benin'];
+
+      foreach ($benin_monuments as &$m) {
+        foreach ($m['images'] as $i => $image) {
+          $key = 'monument::' . $m['key'] . '-' . ($i + 1);
+          if (!empty($img[$key]) && db_image_path_exists($img[$key])) $m['images'][$i] = $img[$key];
+        }
+      }
+      unset($m);
+
+      if (!empty($img['logo::logo']) && db_image_path_exists($img['logo::logo'])) $logo_image = $img['logo::logo'];
+      if (!empty($price['car_rental::location'])) $car_rental_price = $price['car_rental::location'];
     }
-    unset($m);
-
-    $logo_override = db_get_image('logo', 'logo');
-    if ($logo_override && db_image_path_exists($logo_override)) $logo_image = $logo_override;
-
-    $car_override = db_get_price('car_rental', 'location');
-    if ($car_override) $car_rental_price = $car_override;
   }
 }

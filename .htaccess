@@ -1,3 +1,9 @@
+# Page d'erreur 404 personnalisée.
+# En production (InfinityFree) le site est à la racine du domaine : /404.php fonctionne.
+# En local (WAMP), si le projet est dans un sous-dossier, ajustez le chemin
+# (ex. ErrorDocument 404 /Residencerubis/404.php).
+ErrorDocument 404 /404.php
+
 # Development mode - no cache
 # Removed mod_headers/mod_expires directives (not enabled in default WAMP)
 # Cache busting handled via PHP filemtime() in header.php

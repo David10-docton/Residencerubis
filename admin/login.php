@@ -1,5 +1,6 @@
 <?php
 require_once 'auth.php';
+require_once __DIR__ . '/../includes/security.php';
 
 if (admin_is_logged_in()) {
   header('Location: index.php');
@@ -8,16 +9,23 @@ if (admin_is_logged_in()) {
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-  $username = trim($_POST['username'] ?? '');
-  $password = $_POST['password'] ?? '';
-
-  if ($username === ADMIN_USER && password_verify($password, ADMIN_PASS_HASH)) {
-    $_SESSION['admin_logged_in'] = true;
-    $_SESSION['admin_user'] = $username;
-    header('Location: index.php');
-    exit;
+  if (!csrf_verify()) {
+    $error = 'Session expirée : rechargez la page et réessayez.';
+  } elseif (submission_too_fast(2)) {
+    $error = 'Trop de tentatives : veuillez patienter quelques secondes.';
   } else {
-    $error = 'Identifiants incorrects.';
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
+
+    if ($username === ADMIN_USER && password_verify($password, ADMIN_PASS_HASH)) {
+      session_regenerate_id(true);
+      $_SESSION['admin_logged_in'] = true;
+      $_SESSION['admin_user'] = $username;
+      header('Location: index.php');
+      exit;
+    } else {
+      $error = 'Identifiants incorrects.';
+    }
   }
 }
 ?>
@@ -44,6 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <form method="POST" class="login-form">
+      <?= csrf_field() ?>
       <div class="form-group">
         <label>Nom d'utilisateur</label>
         <input type="text" name="username" placeholder="admin" required autofocus>

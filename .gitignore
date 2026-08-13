@@ -1,0 +1,19 @@
+# Secrets — ne jamais versionner
+.env
+.env.local
+*.env
+
+# Cache généré par le site
+includes/cache/
+*.log
+
+# Uploads de l'admin (contenu local / production)
+uploads/*
+!uploads/index.html
+
+# IDE / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db

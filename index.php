@@ -3,36 +3,46 @@ $page_title = "Accueil";
 $meta_desc = "Résidence Rubis à Cotonou, Bénin. Appartements meublés de standing avec vue sur mer, wifi gratuit, climatisation. Réservation en ligne.";
 require_once 'includes/config.php';
 require_once 'includes/db.php';
+require_once 'includes/security.php';
 
 $booking_success = '';
 $booking_error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_submit'])) {
-  $check_in = trim($_POST['check_in'] ?? '');
-  $check_out = trim($_POST['check_out'] ?? '');
-  $email = trim($_POST['email'] ?? '');
-  $apartment = trim($_POST['apartment'] ?? '');
-
-  if ($check_in === '' || $check_out === '' || $email === '' || $apartment === '') {
-    $booking_error = 'Veuillez remplir tous les champs du formulaire.';
-  } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-    $booking_error = 'Adresse email invalide.';
-  } elseif ($check_out <= $check_in) {
-    $booking_error = 'La date de départ doit être postérieure à la date d\'arrivée.';
+  if (honeypot_filled()) {
+    // Robot détecté : on feint le succès sans rien enregistrer.
+    $booking_success = 'Merci ! Votre demande de réservation a bien été enregistrée. Nous vous recontacterons rapidement.';
+  } elseif (!csrf_verify()) {
+    $booking_error = 'Session expirée : rechargez la page et réessayez.';
+  } elseif (submission_too_fast()) {
+    $booking_error = 'Veuillez patienter quelques secondes avant de renvoyer le formulaire.';
   } else {
-    $ok = db_save_booking($apartment, $check_in, $check_out, $email);
+    $check_in = trim($_POST['check_in'] ?? '');
+    $check_out = trim($_POST['check_out'] ?? '');
+    $email = trim($_POST['email'] ?? '');
+    $apartment = trim($_POST['apartment'] ?? '');
 
-    if ($ok) {
-      $subject = 'Nouvelle demande de réservation - Résidence Rubis';
-      $body = "Nouvelle demande de réservation :\n\n"
-            . "Appartement : $apartment\n"
-            . "Arrivée : $check_in\n"
-            . "Départ : $check_out\n"
-            . "Email : $email\n";
-      @mail($site_email, $subject, $body, 'From: ' . $site_email);
-      $booking_success = 'Merci ! Votre demande de réservation a bien été enregistrée. Nous vous recontacterons rapidement.';
+    if ($check_in === '' || $check_out === '' || $email === '' || $apartment === '') {
+      $booking_error = 'Veuillez remplir tous les champs du formulaire.';
+    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+      $booking_error = 'Adresse email invalide.';
+    } elseif ($check_out <= $check_in) {
+      $booking_error = 'La date de départ doit être postérieure à la date d\'arrivée.';
     } else {
-      $booking_error = 'Une erreur est survenue lors de l\'enregistrement. Veuillez réessayer ou nous contacter directement.';
+      $ok = db_save_booking($apartment, $check_in, $check_out, $email);
+
+      if ($ok) {
+        $subject = 'Nouvelle demande de réservation - Résidence Rubis';
+        $body = "Nouvelle demande de réservation :\n\n"
+              . "Appartement : $apartment\n"
+              . "Arrivée : $check_in\n"
+              . "Départ : $check_out\n"
+              . "Email : $email\n";
+        @mail($site_email, $subject, $body, 'From: ' . $site_email);
+        $booking_success = 'Merci ! Votre demande de réservation a bien été enregistrée. Nous vous recontacterons rapidement.';
+      } else {
+        $booking_error = 'Une erreur est survenue lors de l\'enregistrement. Veuillez réessayer ou nous contacter directement.';
+      }
     }
   }
 }
@@ -73,6 +83,8 @@ require_once 'includes/header.php';
         <?php endif; ?>
         <form class="booking-form" method="POST" action="index.php">
           <input type="hidden" name="booking_submit" value="1">
+          <?= csrf_field() ?>
+          <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;opacity:0;height:0;width:0;">
           <div class="form-row">
             <div class="form-group">
               <label>Arrivée</label>
@@ -95,7 +107,6 @@ require_once 'includes/header.php';
                 <?php foreach ($apartments as $a): ?>
                   <option value="<?= htmlspecialchars($a['name']) ?>"><?= $a['name'] ?> - <?= $a['type'] ?></option>
                 <?php endforeach; ?>
-                <option value="Location de voiture">Location de voiture</option>
               </select>
             </div>
           </div>
@@ -104,6 +115,10 @@ require_once 'includes/header.php';
       </div>
     </div>
   </div>
+  <button type="button" class="hero-scroll-hint" aria-label="Défiler vers le contenu">
+    <span class="mouse" aria-hidden="true"></span>
+    <span>Défiler</span>
+  </button>
 </section>
 
 <section class="info-banner animate-on-scroll">
@@ -116,39 +131,46 @@ require_once 'includes/header.php';
 
 <section class="section section-atouts">
   <div class="container">
-    <div class="atouts-split">
-      <div class="atouts-content animate-on-scroll">
-        <div class="section-header">
-          <span class="section-tag">Nos atouts</span>
-          <h2>À la Résidence Rubis nous avons tout ce dont vous avez <span>besoin</span>.</h2>
-          <p>Pour satisfaire nos clients, nous mettons à leur disposition dans la résidence :</p>
-        </div>
-        <div class="atouts-list">
-          <div class="atout-item">
-            <img src="images/site-live/icons/location-pratique.png" alt="" class="atout-icon" loading="lazy" decoding="async">
-            <span class="atout-text">Emplacement pratique à Cotonou avec vue sur la mer</span>
+    <div class="section-header animate-on-scroll">
+      <span class="section-tag">Nos atouts</span>
+      <h2>À la Résidence Rubis nous avons tout ce dont vous avez <span>besoin</span>.</h2>
+      <p>Pour satisfaire nos clients, nous mettons à leur disposition dans la résidence :</p>
+    </div>
+
+    <div class="atouts-layout">
+      <div class="atouts-video animate-on-scroll">
+        <div class="video-card">
+          <span class="video-card-badge"><i class="ph ph-fill ph-play" aria-hidden="true"></i> Visite virtuelle</span>
+          <div class="video-wrapper">
+            <iframe src="https://www.youtube.com/embed/oZC7FrW6NgY" title="Visite virtuelle Résidence Rubis" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
           </div>
-          <div class="atout-item">
-            <img src="images/site-live/icons/wifi.png" alt="" class="atout-icon" loading="lazy" decoding="async">
-            <span class="atout-text">Wi-Fi haut débit disponible gratuitement</span>
-          </div>
-          <div class="atout-item">
-            <img src="images/site-live/icons/climatisation.png" alt="" class="atout-icon" loading="lazy" decoding="async">
-            <span class="atout-text">Appartements climatisés, confort de haut standing</span>
-          </div>
-          <div class="atout-item">
-            <img src="images/site-live/icons/securite.png" alt="" class="atout-icon" loading="lazy" decoding="async">
-            <span class="atout-text">Emplacement sécurisé pour la protection de vos véhicules</span>
+          <div class="video-card-caption">
+            <h3>Visitez notre <span>résidence</span></h3>
+            <p>Un aperçu de nos appartements et de leur confort exceptionnel.</p>
           </div>
         </div>
       </div>
-      <div class="atouts-media animate-on-scroll">
-        <div class="video-split-heading">
-          <h3>Visitez notre <span>résidence</span></h3>
-          <p>Un aperçu de nos appartements et de leur confort exceptionnel.</p>
+
+      <div class="atouts-grid">
+        <div class="atout-card animate-on-scroll">
+          <span class="atout-num">01</span>
+          <span class="atout-icon"><i class="ph ph-fill ph-waves" aria-hidden="true"></i></span>
+          <span class="atout-text">Emplacement pratique à Cotonou avec vue sur la mer</span>
         </div>
-        <div class="video-wrapper">
-          <iframe src="https://www.youtube.com/embed/oZC7FrW6NgY" title="Visite virtuelle Résidence Rubis" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>
+        <div class="atout-card animate-on-scroll">
+          <span class="atout-num">02</span>
+          <span class="atout-icon"><i class="ph ph-fill ph-wifi-high" aria-hidden="true"></i></span>
+          <span class="atout-text">Wi-Fi haut débit disponible gratuitement</span>
+        </div>
+        <div class="atout-card animate-on-scroll">
+          <span class="atout-num">03</span>
+          <span class="atout-icon"><i class="ph ph-fill ph-snowflake" aria-hidden="true"></i></span>
+          <span class="atout-text">Appartements climatisés, confort de haut standing</span>
+        </div>
+        <div class="atout-card animate-on-scroll">
+          <span class="atout-num">04</span>
+          <span class="atout-icon"><i class="ph ph-fill ph-shield-check" aria-hidden="true"></i></span>
+          <span class="atout-text">Emplacement sécurisé pour la protection de vos véhicules</span>
         </div>
       </div>
     </div>
@@ -160,7 +182,7 @@ require_once 'includes/header.php';
     <div class="section-header animate-on-scroll">
       <span class="section-tag">Sélection</span>
       <h2>Nos <span>Appartements</span></h2>
-      <p>Des logements spacieux, climatisés, avec vue sur mer et tout le confort moderne.</p>
+      <p>Location en courte et longue durée. Logements spacieux, climatisés, avec vue sur mer et tout le confort moderne.</p>
     </div>
     <div class="apartments-grid">
       <?php foreach (array_slice($apartments, 0, 6) as $a): ?>
@@ -177,6 +199,7 @@ require_once 'includes/header.php';
             <span><?= $feat ?></span>
             <?php endforeach; ?>
           </div>
+          <p class="apartment-rental"><i class="ph ph-fill ph-calendar-check" aria-hidden="true"></i> Courte &amp; longue durée</p>
           <a href="produit.php?appartement=<?= urlencode(mb_strtolower($a['name'])) ?>" class="btn btn-primary">Voir plus <i class="ph ph-fill ph-arrow-right" aria-hidden="true"></i></a>
         </div>
       </div>

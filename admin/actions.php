@@ -10,6 +10,11 @@ function redirect_with_message($msg, $type = 'success', $suffix = '') {
   exit;
 }
 
+// Protection CSRF : toute écriture doit porter un jeton valide.
+if (!csrf_verify()) {
+  redirect_with_message('Session expirée : veuillez réessayer.', 'error');
+}
+
 $action = $_POST['action'] ?? '';
 $section = $_POST['section'] ?? '';
 $item = $_POST['item'] ?? '';
@@ -65,6 +70,7 @@ switch ($action) {
 
     $url = 'uploads/' . $filename;
     db_set_image($section, $item, $url);
+    db_cache_invalidate();
     redirect_with_message('Photo remplacée avec succès !', 'success', $tab);
     break;
 
@@ -77,6 +83,7 @@ switch ($action) {
       redirect_with_message('URL invalide. Elle doit commencer par http:// ou https://', 'error', $tab);
     }
     db_set_image($section, $item, $url);
+    db_cache_invalidate();
     redirect_with_message('URL mise à jour avec succès !', 'success', $tab);
     break;
 
@@ -96,6 +103,7 @@ switch ($action) {
       }
     }
     db_delete_image($section, $item);
+    db_cache_invalidate();
     redirect_with_message('Photo réinitialisée à l\'image par défaut.', 'success', $tab);
     break;
 
@@ -108,11 +116,13 @@ switch ($action) {
       redirect_with_message('Prix trop long (maximum 255 caractères).', 'error', '?tab=prices');
     }
     db_set_price($section, $item, $price);
+    db_cache_invalidate();
     redirect_with_message('Prix mis à jour avec succès !', 'success', '?tab=prices');
     break;
 
   case 'price_reset':
     db_delete_price($section, $item);
+    db_cache_invalidate();
     redirect_with_message('Prix réinitialisé au tarif par défaut.', 'success', '?tab=prices');
     break;
 
