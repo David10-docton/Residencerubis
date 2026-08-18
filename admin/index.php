@@ -15,13 +15,18 @@ if (isset($_SESSION['admin_msg'])) {
 }
 
 $tab = $_GET['tab'] ?? 'photos';
-if (!in_array($tab, ['photos', 'prices', 'requests'], true)) $tab = 'photos';
+if (!in_array($tab, ['photos', 'prices', 'requests', 'blog'], true)) $tab = 'photos';
 
 $bookings = [];
 $messages = [];
+$blog_posts = [];
 if ($tab === 'requests') {
   $bookings = db_get_bookings();
   $messages = db_get_contact_messages();
+}
+if ($tab === 'blog') {
+  db_blog_seed();
+  $blog_posts = db_blog_get_all();
 }
 
 $overrides = [];
@@ -36,12 +41,18 @@ foreach (db_get_all_prices() as $row) {
 
 function add_photo_field(&$photo_fields, $section, $name, $label, $default, $overrides) {
   $key = $section . '::' . $name;
+  $raw = isset($overrides[$key]) ? $overrides[$key] : $default;
+  // Depuis admin/, les chemins relatifs racine doivent être préfixés avec ../
+  $current = $raw;
+  if ($raw !== '' && strpos($raw, 'http://') !== 0 && strpos($raw, 'https://') !== 0 && strpos($raw, 'uploads/') !== 0 && is_file(__DIR__ . '/../' . $raw)) {
+    $current = '../' . $raw;
+  }
   $photo_fields[$key] = [
     'section' => $section,
     'name' => $name,
     'label' => $label,
     'default' => $default,
-    'current' => isset($overrides[$key]) ? $overrides[$key] : $default,
+    'current' => $current,
     'custom' => isset($overrides[$key]),
   ];
 }
@@ -139,6 +150,7 @@ $car_prices = [
         <a href="index.php" class="<?= $tab === 'photos' ? 'active' : '' ?>"><i class="ph ph-fill ph-camera" aria-hidden="true"></i> Photos</a>
         <a href="index.php?tab=prices" class="<?= $tab === 'prices' ? 'active' : '' ?>"><i class="ph ph-fill ph-money" aria-hidden="true"></i> Prix</a>
         <a href="index.php?tab=requests" class="<?= $tab === 'requests' ? 'active' : '' ?>"><i class="ph ph-fill ph-tray" aria-hidden="true"></i> Demandes</a>
+        <a href="index.php?tab=blog" class="<?= $tab === 'blog' ? 'active' : '' ?>"><i class="ph ph-fill ph-notebook" aria-hidden="true"></i> Blog</a>
         <a href="../index.php" target="_blank">Voir le site <i class="ph ph-fill ph-arrow-square-out" aria-hidden="true"></i></a>
         <a href="logout.php" class="logout">Déconnexion</a>
       </div>
@@ -148,12 +160,14 @@ $car_prices = [
   <main class="admin-main">
     <div class="admin-header">
       <div>
-        <h1><?= $tab === 'prices' ? 'Gestion des prix' : ($tab === 'requests' ? 'Demandes reçues' : 'Gestion des photos') ?></h1>
+        <h1><?= $tab === 'prices' ? 'Gestion des prix' : ($tab === 'requests' ? 'Demandes reçues' : ($tab === 'blog' ? 'Gestion du blog' : 'Gestion des photos')) ?></h1>
         <p><?= $tab === 'prices'
           ? 'Modifiez les tarifs des appartements, des services payants et de la location de voiture.'
           : ($tab === 'requests'
-            ? 'Réservations envoyées depuis la page d\'accueil et messages du formulaire de contact.'
-            : 'Chaque page du site est modifiable : remplacez ou réinitialisez les photos qui y sont affichées.') ?></p>
+            ? 'Suivez les demandes de réservation et les messages reçus depuis le site.'
+            : ($tab === 'blog'
+              ? 'Créez, modifiez et publiez des articles pour le blog de la Résidence Rubis.'
+              : 'Chaque page du site est modifiable : remplacez ou réinitialisez les photos qui y sont affichées.')) ?></p>
       </div>
     </div>
 
@@ -275,7 +289,7 @@ $car_prices = [
         <div class="admin-section-head">
           <div>
             <h2><i class="ph ph-fill ph-calendar-check" aria-hidden="true"></i> Réservations</h2>
-            <p>Demandes envoyées depuis le formulaire de la page d'accueil</p>
+            <p>Les demandes en attente bloquent les dates jusqu’à leur confirmation ou annulation.</p>
           </div>
         </div>
         <?php if (!$bookings): ?>
@@ -284,15 +298,31 @@ $car_prices = [
           <div class="table-wrap">
             <table class="admin-table">
               <thead>
-                <tr><th>Appartement</th><th>Arrivée</th><th>Départ</th><th>Email</th><th>Reçu le</th></tr>
+                <tr><th>Nom</th><th>Appartement</th><th>Arrivée</th><th>Départ</th><th>Email</th><th>Statut</th><th>Reçu le</th></tr>
               </thead>
               <tbody>
                 <?php foreach ($bookings as $b): ?>
                   <tr>
+                    <td><?= htmlspecialchars($b['name']) ?></td>
                     <td><?= htmlspecialchars($b['apartment']) ?></td>
                     <td><?= htmlspecialchars($b['check_in']) ?></td>
                     <td><?= htmlspecialchars($b['check_out']) ?></td>
                     <td><a href="mailto:<?= htmlspecialchars($b['email']) ?>"><?= htmlspecialchars($b['email']) ?></a></td>
+                    <td>
+                      <form method="POST" action="actions.php" class="booking-status-form">
+                        <input type="hidden" name="action" value="booking_status">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="section" value="booking">
+                        <input type="hidden" name="item" value="<?= (int)$b['id'] ?>">
+                        <input type="hidden" name="booking_id" value="<?= (int)$b['id'] ?>">
+                        <select name="status" aria-label="Statut de la réservation <?= htmlspecialchars($b['apartment']) ?>">
+                          <?php foreach (['pending' => 'En attente', 'confirmed' => 'Confirmée', 'cancelled' => 'Annulée', 'completed' => 'Terminée'] as $value => $label): ?>
+                            <option value="<?= $value ?>" <?= ($b['status'] ?? 'pending') === $value ? 'selected' : '' ?>><?= $label ?></option>
+                          <?php endforeach; ?>
+                        </select>
+                        <button type="submit" class="btn btn-outline btn-sm">Mettre à jour</button>
+                      </form>
+                    </td>
                     <td><?= htmlspecialchars($b['created_at']) ?></td>
                   </tr>
                 <?php endforeach; ?>
@@ -322,6 +352,102 @@ $car_prices = [
               <p><?= nl2br(htmlspecialchars($m['message'])) ?></p>
             </div>
           <?php endforeach; ?>
+        <?php endif; ?>
+      </section>
+
+    <?php elseif ($tab === 'blog'): ?>
+
+      <section class="admin-section">
+        <div class="admin-section-head">
+          <div>
+            <h2><i class="ph ph-fill ph-notebook" aria-hidden="true"></i> Articles du blog</h2>
+            <p>Créez et gérez les articles publiés sur le blog</p>
+          </div>
+          <button type="button" class="btn btn-primary btn-sm" onclick="document.getElementById('blog-form-wrap').style.display='block';document.getElementById('blog-edit-id').value='';document.getElementById('blog-edit-title').value='';document.getElementById('blog-edit-subtitle').value='';document.getElementById('blog-edit-slug').value='';document.getElementById('blog-edit-image').value='';document.getElementById('blog-edit-video').value='';document.getElementById('blog-edit-excerpt').value='';document.getElementById('blog-edit-content').value='';document.getElementById('blog-edit-published').value='1';"><i class="ph ph-fill ph-plus" aria-hidden="true"></i> Nouvel article</button>
+        </div>
+
+        <div id="blog-form-wrap" class="blog-form-wrap" style="display:none;">
+          <form method="POST" action="actions.php" class="blog-edit-form">
+            <input type="hidden" name="action" value="blog_save">
+            <?= csrf_field() ?>
+            <input type="hidden" name="tab" value="blog">
+            <input type="hidden" name="id" id="blog-edit-id" value="">
+            <div class="blog-form-grid">
+              <div class="form-group">
+                <label>Titre</label>
+                <input type="text" name="title" id="blog-edit-title" placeholder="Titre de l'article" required>
+              </div>
+              <div class="form-group">
+                <label>Sous-titre</label>
+                <input type="text" name="subtitle" id="blog-edit-subtitle" placeholder="Courte description">
+              </div>
+              <div class="form-group">
+                <label>Slug (URL)</label>
+                <input type="text" name="slug" id="blog-edit-slug" placeholder="titre-de-l-article" required pattern="[a-z0-9\-]+">
+              </div>
+              <div class="form-group">
+                <label>Image URL</label>
+                <input type="url" name="image" id="blog-edit-image" placeholder="https://...">
+              </div>
+              <div class="form-group">
+                <label>Vidéo URL (optionnel, MP4)</label>
+                <input type="url" name="video_url" id="blog-edit-video" placeholder="chemin/vers/video.mp4">
+              </div>
+              <div class="form-group blog-form-full">
+                <label>Extrait (affiché dans la liste)</label>
+                <textarea name="excerpt" id="blog-edit-excerpt" rows="2" placeholder="Courte description pour la carte..."></textarea>
+              </div>
+              <div class="form-group blog-form-full">
+                <label>Contenu de l'article (HTML accepté)</label>
+                <textarea name="content" id="blog-edit-content" rows="10" placeholder="Contenu complet de l'article..." required></textarea>
+              </div>
+              <div class="form-group">
+                <label>Statut</label>
+                <select name="published" id="blog-edit-published">
+                  <option value="1">Publié</option>
+                  <option value="0">Brouillon</option>
+                </select>
+              </div>
+            </div>
+            <div style="margin-top:12px;display:flex;gap:8px;">
+              <button type="submit" class="btn btn-primary btn-sm"><i class="ph ph-fill ph-floppy-disk" aria-hidden="true"></i> Enregistrer</button>
+              <button type="button" class="btn btn-outline btn-sm" onclick="document.getElementById('blog-form-wrap').style.display='none';">Annuler</button>
+            </div>
+          </form>
+        </div>
+
+        <?php if (empty($blog_posts)): ?>
+          <div class="admin-note">Aucun article de blog pour le moment. Créez votre premier article !</div>
+        <?php else: ?>
+          <div class="table-wrap">
+            <table class="admin-table">
+              <thead>
+                <tr><th>Titre</th><th>Slug</th><th>Statut</th><th>Créé le</th><th>Actions</th></tr>
+              </thead>
+              <tbody>
+                <?php foreach ($blog_posts as $bp): ?>
+                  <tr>
+                    <td><strong><?= htmlspecialchars($bp['title']) ?></strong><br><small style="color:var(--text-muted);"><?= htmlspecialchars($bp['subtitle']) ?></small></td>
+                    <td><code><?= htmlspecialchars($bp['slug']) ?></code></td>
+                    <td><?= $bp['published'] ? '<span style="color:var(--success);">Publié</span>' : '<span style="color:var(--text-muted);">Brouillon</span>' ?></td>
+                    <td><?= htmlspecialchars($bp['created_at']) ?></td>
+                    <td style="white-space:nowrap;">
+                      <button type="button" class="btn btn-outline btn-sm" onclick="editBlogPost(<?= (int)$bp['id'] ?>, <?= htmlspecialchars(json_encode($bp['title']), ENT_QUOTES) ?>, <?= htmlspecialchars(json_encode($bp['subtitle']), ENT_QUOTES) ?>, <?= htmlspecialchars(json_encode($bp['slug']), ENT_QUOTES) ?>, <?= htmlspecialchars(json_encode($bp['image']), ENT_QUOTES) ?>, <?= htmlspecialchars(json_encode($bp['video_url'] ?? ''), ENT_QUOTES) ?>, <?= htmlspecialchars(json_encode($bp['excerpt']), ENT_QUOTES) ?>, <?= htmlspecialchars(json_encode($bp['content']), ENT_QUOTES) ?>, <?= (int)$bp['published'] ?>)"><i class="ph ph-fill ph-pencil-simple" aria-hidden="true"></i></button>
+                      <form method="POST" action="actions.php" style="display:inline;" onsubmit="return confirm('Supprimer cet article ?');">
+                        <input type="hidden" name="action" value="blog_delete">
+                        <?= csrf_field() ?>
+                        <input type="hidden" name="id" value="<?= (int)$bp['id'] ?>">
+                        <button type="submit" class="btn btn-danger btn-sm"><i class="ph ph-fill ph-trash" aria-hidden="true"></i></button>
+                      </form>
+                      <?php if ($bp['published']): ?>
+                        <a href="../article.php?slug=<?= urlencode($bp['slug']) ?>" target="_blank" class="btn btn-outline btn-sm" title="Voir"><i class="ph ph-fill ph-arrow-square-out" aria-hidden="true"></i></a>
+                      <?php endif; ?>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
         <?php endif; ?>
       </section>
 
@@ -432,6 +558,20 @@ $car_prices = [
       document.getElementById('action-form-item').value = item;
       document.getElementById('action-form-anchor').value = anchor || '';
       document.getElementById('action-form').submit();
+    }
+
+    function editBlogPost(id, title, subtitle, slug, image, video_url, excerpt, content, published) {
+      document.getElementById('blog-form-wrap').style.display = 'block';
+      document.getElementById('blog-edit-id').value = id;
+      document.getElementById('blog-edit-title').value = title;
+      document.getElementById('blog-edit-subtitle').value = subtitle;
+      document.getElementById('blog-edit-slug').value = slug;
+      document.getElementById('blog-edit-image').value = image;
+      document.getElementById('blog-edit-video').value = video_url || '';
+      document.getElementById('blog-edit-excerpt').value = excerpt;
+      document.getElementById('blog-edit-content').value = content;
+      document.getElementById('blog-edit-published').value = published;
+      document.getElementById('blog-form-wrap').scrollIntoView({ behavior: 'smooth' });
     }
   </script>
 </body>

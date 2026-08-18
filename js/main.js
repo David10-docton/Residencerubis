@@ -327,16 +327,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const produitMain = document.querySelector('.produit-main img');
   const produitThumbs = document.querySelectorAll('.produit-thumb');
-  if (produitMain && produitThumbs.length) {
-    produitThumbs.forEach(thumb => {
-      thumb.addEventListener('click', () => {
-        produitMain.src = thumb.src;
-        produitMain.alt = thumb.alt;
-        produitThumbs.forEach(t => t.classList.remove('active'));
-        thumb.classList.add('active');
-      });
-    });
-  }
 
   /* ===== LIGHTBOX : galerie photos de la fiche produit ===== */
   const lightbox = document.getElementById('lightbox');
@@ -387,22 +377,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const zoomBtn = document.querySelector('.produit-zoom');
     if (zoomBtn) {
-      zoomBtn.addEventListener('click', () => openLightbox(0));
+      zoomBtn.addEventListener('click', (e) => { e.stopPropagation(); openLightbox(0); });
     }
     if (produitMain) {
-      produitMain.addEventListener('click', () => openLightbox(0));
+      produitMain.addEventListener('click', (e) => { e.stopPropagation(); openLightbox(0); });
     }
     produitThumbs.forEach((thumb, idx) => {
-      thumb.addEventListener('click', () => openLightbox(idx + 1));
+      thumb.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openLightbox(idx + 1);
+      });
     });
 
-    if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
+    if (closeBtn) closeBtn.addEventListener('click', (e) => { e.stopPropagation(); closeLightbox(); });
     if (prevBtn) prevBtn.addEventListener('click', (e) => { e.stopPropagation(); showLightbox(currentIndex - 1); });
     if (nextBtn) nextBtn.addEventListener('click', (e) => { e.stopPropagation(); showLightbox(currentIndex + 1); });
 
+    // Fermer la lightbox au clic sur le fond (zone sombre)
     lightbox.addEventListener('click', (e) => {
       if (e.target === lightbox) closeLightbox();
     });
+    // Empêcher les clics sur le contenu de la lightbox de la fermer par accident
+    const lbFigure = lightbox.querySelector('.lightbox-figure');
+    if (lbFigure) lbFigure.addEventListener('click', (e) => e.stopPropagation());
+    if (lightboxImg) lightboxImg.addEventListener('click', (e) => e.stopPropagation());
 
     document.addEventListener('keydown', (e) => {
       if (!lightbox.classList.contains('open')) return;
@@ -410,6 +408,34 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.key === 'ArrowLeft') { e.preventDefault(); showLightbox(currentIndex - 1); }
       if (e.key === 'ArrowRight') { e.preventDefault(); showLightbox(currentIndex + 1); }
     });
+  }
+
+  /* ============================================================
+   * Carrousel vidéo (fiche produit)
+   * ============================================================ */
+  const videoCarousel = document.getElementById('videoCarousel');
+  if (videoCarousel) {
+    const videoSlides = videoCarousel.querySelectorAll('.produit-video-slide');
+    const videoDots = videoCarousel.querySelectorAll('.video-dot');
+    const videoCounter = document.getElementById('videoCounter');
+    let currentVideo = 0;
+
+    window.videoCarouselGo = function(idx) {
+      // Pause la vidéo en cours
+      const currentSlide = videoSlides[currentVideo];
+      if (currentSlide) {
+        const vid = currentSlide.querySelector('video');
+        if (vid) vid.pause();
+      }
+      currentVideo = (idx + videoSlides.length) % videoSlides.length;
+      videoSlides.forEach((s, i) => s.classList.toggle('active', i === currentVideo));
+      videoDots.forEach((d, i) => d.classList.toggle('active', i === currentVideo));
+      if (videoCounter) videoCounter.textContent = (currentVideo + 1) + ' / ' + videoSlides.length;
+    };
+
+    window.videoCarouselNav = function(dir) {
+      videoCarouselGo(currentVideo + dir);
+    };
   }
 
   /* ============================================================

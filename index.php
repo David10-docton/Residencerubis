@@ -21,19 +21,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_submit'])) {
     $check_out = trim($_POST['check_out'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $apartment = trim($_POST['apartment'] ?? '');
+    $client_name = trim($_POST['client_name'] ?? '');
 
-    if ($check_in === '' || $check_out === '' || $email === '' || $apartment === '') {
+    if ($check_in === '' || $check_out === '' || $email === '' || $apartment === '' || $client_name === '') {
       $booking_error = 'Veuillez remplir tous les champs du formulaire.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
       $booking_error = 'Adresse email invalide.';
     } elseif ($check_out <= $check_in) {
       $booking_error = 'La date de départ doit être postérieure à la date d\'arrivée.';
+    } elseif (!db_booking_is_available($apartment, $check_in, $check_out)) {
+      $booking_error = 'Ces dates ne sont plus disponibles pour cet appartement. Choisissez un autre séjour ou contactez-nous.';
     } else {
-      $ok = db_save_booking($apartment, $check_in, $check_out, $email);
+      $client_id = !empty($_SESSION['client_id']) ? (int)$_SESSION['client_id'] : null;
+      $ok = db_save_booking($apartment, $client_name, $check_in, $check_out, $email, $client_id);
 
       if ($ok) {
         $subject = 'Nouvelle demande de réservation - Résidence Rubis';
         $body = "Nouvelle demande de réservation :\n\n"
+              . "Nom : $client_name\n"
               . "Appartement : $apartment\n"
               . "Arrivée : $check_in\n"
               . "Départ : $check_out\n"
@@ -62,7 +67,7 @@ require_once 'includes/header.php';
       <div class="hero-text animate animate-d1">
         <span class="section-tag">Bienvenue à la Résidence Rubis</span>
         <h1>Vous êtes <span>ici</span> chez vous.</h1>
-        <p>Implantés au cœur de Cotonou, non loin du quartier des ambassades et très proche de la mer, nos appartements vous offrent la liberté de profiter d'un grand espace lors de vos séjours personnels ou professionnels.</p>
+        <p>Implantés au cœur de Cotonou, non loin du quartier des ambassades et très proches de la mer, nos appartements vous offrent la liberté de profiter d'un grand espace lors de vos séjours personnels ou professionnels, pour des locations de courte ou de longue durée.</p>
         <div class="hero-buttons">
           <a href="nos-appartements.php" class="btn btn-primary">Voir nos appartements <i class="ph ph-fill ph-arrow-right" aria-hidden="true"></i></a>
           <a href="contact.php" class="btn btn-secondary"><i class="ph ph-fill ph-envelope" aria-hidden="true"></i> Nous contacter</a>
@@ -97,28 +102,28 @@ require_once 'includes/header.php';
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label>Email</label>
-              <input type="email" name="email" placeholder="votre@email.com" required>
+              <label>Nom</label>
+              <input type="text" name="client_name" placeholder="Votre nom" value="<?= htmlspecialchars($_SESSION['client_name'] ?? '') ?>" required>
             </div>
             <div class="form-group">
-              <label>Appartement</label>
-              <select name="apartment" required>
-                <option value="">Choisissez...</option>
-                <?php foreach ($apartments as $a): ?>
-                  <option value="<?= htmlspecialchars($a['name']) ?>"><?= $a['name'] ?> - <?= $a['type'] ?></option>
-                <?php endforeach; ?>
-              </select>
+              <label>Email</label>
+              <input type="email" name="email" placeholder="votre@email.com" value="<?= htmlspecialchars($_SESSION['client_email'] ?? '') ?>" required>
             </div>
+          </div>
+          <div class="form-group">
+            <label>Appartement</label>
+            <select name="apartment" required>
+              <option value="">Choisissez...</option>
+              <?php foreach ($apartments as $a): ?>
+                <option value="<?= htmlspecialchars($a['name']) ?>"><?= $a['name'] ?> - <?= $a['type'] ?></option>
+              <?php endforeach; ?>
+            </select>
           </div>
           <button type="submit" class="btn btn-primary"><i class="ph ph-fill ph-calendar-check" aria-hidden="true"></i> Réserver maintenant</button>
         </form>
       </div>
     </div>
   </div>
-  <button type="button" class="hero-scroll-hint" aria-label="Défiler vers le contenu">
-    <span class="mouse" aria-hidden="true"></span>
-    <span>Défiler</span>
-  </button>
 </section>
 
 <section class="info-banner animate-on-scroll">

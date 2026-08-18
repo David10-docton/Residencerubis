@@ -4,12 +4,22 @@ $meta_desc = "Découvrez nos appartements meublés à Cotonou : ANAIS, LYS, OCCI
 require_once 'includes/config.php';
 
 $search_query = trim($_GET['q'] ?? '');
+$sort = $_GET['sort'] ?? 'default';
 $search_results = $apartments;
 if ($search_query !== '') {
   $search_results = array_values(array_filter($apartments, function ($a) use ($search_query) {
     $haystack = mb_strtolower($a['name'] . ' ' . $a['type'] . ' ' . $a['description']);
     return strpos($haystack, mb_strtolower($search_query)) !== false;
   }));
+}
+
+if ($sort === 'price_asc' || $sort === 'price_desc') {
+  usort($search_results, function ($a, $b) use ($sort) {
+    $result = ((int)preg_replace('/\D/', '', $a['price'])) <=> ((int)preg_replace('/\D/', '', $b['price']));
+    return $sort === 'price_asc' ? $result : -$result;
+  });
+} elseif ($sort === 'name') {
+  usort($search_results, fn($a, $b) => strcasecmp($a['name'], $b['name']));
 }
 
 require_once 'includes/header.php';
@@ -27,7 +37,6 @@ require_once 'includes/header.php';
     <div class="section-header animate-on-scroll">
       <span class="section-tag">Nos bâtiments</span>
       <h2>Parcourez nos <span>bâtiments</span></h2>
-      <p>Chaque bâtiment de la résidence porte le nom de sa maison. Les photos défilent toutes les 5 secondes.</p>
     </div>
     <div class="building-slider animate-on-scroll">
       <?php foreach ($apartments as $i => $a): ?>
@@ -53,6 +62,16 @@ require_once 'includes/header.php';
       <h2>Choisissez votre <span>appartement</span></h2>
       <p><?= $search_query !== '' ? 'Résultats de la recherche pour « ' . htmlspecialchars($search_query) . ' »' : 'Location en courte et longue durée.' ?></p>
     </div>
+    <form class="apartment-sort" method="GET" action="nos-appartements.php">
+      <?php if ($search_query !== ''): ?><input type="hidden" name="q" value="<?= htmlspecialchars($search_query) ?>"><?php endif; ?>
+      <label for="apartment-sort">Trier les appartements</label>
+      <select id="apartment-sort" name="sort" onchange="this.form.submit()">
+        <option value="default" <?= $sort === 'default' ? 'selected' : '' ?>>Sélection de la résidence</option>
+        <option value="price_asc" <?= $sort === 'price_asc' ? 'selected' : '' ?>>Tarif croissant</option>
+        <option value="price_desc" <?= $sort === 'price_desc' ? 'selected' : '' ?>>Tarif décroissant</option>
+        <option value="name" <?= $sort === 'name' ? 'selected' : '' ?>>Nom de l’appartement</option>
+      </select>
+    </form>
     <?php if (empty($search_results)): ?>
       <div style="text-align:center;padding:40px 0;">
         <p>Aucun appartement ne correspond à votre recherche.</p>

@@ -11,6 +11,10 @@ includes/cache/
 uploads/*
 !uploads/index.html
 
+# Fichiers non utilisés
+UT/
+*.mp4
+
 # IDE / OS
 .vscode/
 .idea/

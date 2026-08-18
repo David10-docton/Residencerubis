@@ -7,8 +7,9 @@ session_start();
 require_once __DIR__ . '/../includes/security.php';
 load_env_file(__DIR__ . '/../.env');
 
-define('ADMIN_USER', getenv('ADMIN_USER') ?: 'admin');
-define('ADMIN_PASS_HASH', getenv('ADMIN_PASS_HASH') ?: '$2y$10$BkNmkODhaIyFRCNMXZdexu2lCsaZgq/u.s/z1gerZdYKC/LgwxKBS');
+define('ADMIN_USER', getenv('ADMIN_USER') ?: 'savplus');
+define('ADMIN_PASS', getenv('ADMIN_PASS') ?: 's@vplus');
+define('ADMIN_PASS_HASH', getenv('ADMIN_PASS_HASH') ?: password_hash(ADMIN_PASS, PASSWORD_BCRYPT));
 
 function admin_is_logged_in() {
   return isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;

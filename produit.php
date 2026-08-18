@@ -18,9 +18,11 @@ if (!$apartment) {
 if (!$apartment) $apartment = $apartments[0];
 $slug = mb_strtolower($apartment['name']);
 
-$gallery = glob($apartment['gallery'] . '/*.jpg');
-if (empty($gallery)) $gallery = glob($apartment['gallery'] . '/*.jpeg');
-if (empty($gallery)) $gallery = glob($apartment['gallery'] . '/*.png');
+$gallery_images = glob($apartment['gallery'] . '/*.jpg');
+if (empty($gallery_images)) $gallery_images = glob($apartment['gallery'] . '/*.jpeg');
+if (empty($gallery_images)) $gallery_images = glob($apartment['gallery'] . '/*.png');
+$gallery_videos = !empty($apartment['video_url']) ? [$apartment['video_url']] : [];
+$gallery = $gallery_images;
 
 $booking_success = '';
 $booking_error = '';
@@ -40,9 +42,11 @@ if (($_POST['booking_submit'] ?? '') === '1') {
     $fin_mois    = (int)($_POST['fin_mois']    ?? 0);
     $fin_annee   = (int)($_POST['fin_annee']   ?? 0);
     $email       = trim($_POST['email'] ?? '');
+    $client_name = trim($_POST['client_name'] ?? '');
 
     $dates_valides = $debut_jour && $debut_mois && $debut_annee && $fin_jour && $fin_mois && $fin_annee
       && $email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)
+      && $client_name !== ''
       && checkdate($debut_mois, $debut_jour, $debut_annee)
       && checkdate($fin_mois, $fin_jour, $fin_annee);
 
@@ -52,31 +56,35 @@ if (($_POST['booking_submit'] ?? '') === '1') {
 
       if ($check_out <= $check_in) {
         $booking_error = 'La date de départ doit être postérieure à la date d\'arrivée.';
+      } elseif (!db_booking_is_available($apartment['name'], $check_in, $check_out)) {
+        $booking_error = 'Ces dates ne sont plus disponibles pour cet appartement. Choisissez un autre séjour ou contactez-nous.';
       } else {
+        $client_id = !empty($_SESSION['client_id']) ? (int)$_SESSION['client_id'] : null;
         $saved = (file_exists(__DIR__ . '/includes/db.php') && function_exists('db_save_booking'))
-          ? db_save_booking($apartment['name'], $check_in, $check_out, $email)
+          ? db_save_booking($apartment['name'], $client_name, $check_in, $check_out, $email, $client_id)
           : false;
         $subject = "Réservation Résidence Rubis - " . $apartment['name'];
         $nights = max(1, (int)((strtotime($check_out) - strtotime($check_in)) / 86400));
         $price_n = (int)preg_replace('/\D/', '', $apartment['price']);
         $total_f = $nights * $price_n;
         $body = "Nouvelle demande de réservation\n"
+          . "Nom : $client_name\n"
           . "Appartement : {$apartment['name']}\n"
           . "Arrivée : $check_in\n"
           . "Départ : $check_out\n"
           . "Nombre de nuits : $nights\n"
           . "Tarif / nuit : {$apartment['price']} F CFA\n"
-          . "Total estimé : " . number_format($total_f, 0, ',', ' ') . " F CFA (électricité non comprise)\n"
+          . "Total estimé : " . number_format($total_f, 0, ',', ' ') . " F CFA (électricité à la charge du preneur)\n"
           . "Email : $email\n";
         @mail($site_email, $subject, $body, 'From: ' . $email);
         if ($saved !== false) {
-          $booking_success = 'Merci ! Votre demande de réservation a bien été enregistrée. Nous vous recontacterons rapidement.';
+          $booking_success = 'Votre demande est bien enregistrée. Elle est en attente de confirmation par la Résidence Rubis. Un récapitulatif vous sera envoyé à ' . $email . '.';
         } else {
           $booking_error = 'Une erreur est survenue lors de l\'enregistrement. Veuillez réessayer ou nous contacter directement.';
         }
       }
     } else {
-      $booking_error = 'Veuillez remplir tous les champs correctement (dates et email).';
+      $booking_error = 'Veuillez remplir tous les champs correctement (nom, dates et email).';
     }
   }
 }
@@ -97,18 +105,32 @@ require_once 'includes/header.php';
 <section class="produit">
   <div class="container produit-grid">
     <div class="produit-gallery animate-on-scroll">
-      <?php if (!empty($gallery)): ?>
+      <?php if (!empty($gallery_images)): ?>
       <div class="produit-main">
-        <img src="<?= htmlspecialchars($gallery[0]) ?>" alt="<?= htmlspecialchars($apartment['name']) ?>" loading="eager" decoding="async">
+        <img src="<?= htmlspecialchars($gallery_images[0]) ?>" alt="<?= htmlspecialchars($apartment['name']) ?>" loading="eager" decoding="async">
         <button type="button" class="produit-zoom" aria-label="Agrandir l'image"><i class="ph ph-fill ph-magnifying-glass-plus" aria-hidden="true"></i></button>
       </div>
-      <?php if (count($gallery) > 1): ?>
+      <?php if (count($gallery_images) > 1): ?>
       <div class="produit-thumbs">
-        <?php foreach (array_slice($gallery, 1) as $i => $img): ?>
+        <?php foreach (array_slice($gallery_images, 1) as $i => $img): ?>
         <img src="<?= htmlspecialchars($img) ?>" alt="<?= htmlspecialchars($apartment['name']) ?> - photo <?= $i + 2 ?>" class="produit-thumb<?= $i === 0 ? ' active' : '' ?>" loading="lazy" decoding="async">
         <?php endforeach; ?>
       </div>
       <?php endif; ?>
+      <?php endif; ?>
+
+      <?php if (!empty($gallery_videos)): ?>
+      <div class="produit-videos">
+        <div class="produit-videos-header">
+          <i class="ph ph-fill ph-play-circle" aria-hidden="true"></i>
+          <h3>Vidéo<?= count($gallery_videos) > 1 ? 's' : '' ?> de l'appartement</h3>
+        </div>
+        <div class="produit-video-embed">
+          <?php foreach ($gallery_videos as $vurl): ?>
+          <iframe src="<?= htmlspecialchars($vurl) ?>" title="Vidéo <?= htmlspecialchars($apartment['name']) ?>" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen class="produit-yt-embed"></iframe>
+          <?php endforeach; ?>
+        </div>
+      </div>
       <?php endif; ?>
 
       <!-- Lightbox : agrandissement des photos -->
@@ -125,12 +147,12 @@ require_once 'includes/header.php';
     <div class="produit-info animate-on-scroll">
       <h2 class="produit-title"><?= htmlspecialchars($apartment['name']) ?></h2>
       <div class="produit-specs">
-        <p><strong><span class="spec-label">TARIFS :</span> <?= htmlspecialchars($apartment['price']) ?> F CFA (<?= htmlspecialchars($apartment['price_eur']) ?>€) nuitée</strong></p>
+        <p><strong><span class="spec-label">TARIF :</span> <?= htmlspecialchars($apartment['price']) ?> F CFA / nuitée</strong></p>
         <p><strong><span class="spec-label">LOCATION :</span> <?= htmlspecialchars($rental_type) ?></strong></p>
         <p><strong><span class="spec-label">TYPES APPARTEMENTS :</span> <?= htmlspecialchars($apartment['type']) ?> ( <?= htmlspecialchars($apartment['rooms']) ?> )</strong></p>
         <p><strong><span class="spec-label">SURFACES :</span> <?= htmlspecialchars($apartment['surface']) ?></strong></p>
       </div>
-      <p class="produit-note">Tarif par nuitée. <?= htmlspecialchars($electricity_note) ?></p>
+      <p class="produit-note"><strong>Tarif par nuitée. <?= htmlspecialchars($electricity_note) ?></strong></p>
 
       <?php if ($booking_success): ?>
         <div class="booking-alert booking-success"><?= htmlspecialchars($booking_success) ?></div>
@@ -197,9 +219,14 @@ require_once 'includes/header.php';
           </div>
 
         </div>
+        <p class="booking-reassurance"><i class="ph ph-fill ph-shield-check" aria-hidden="true"></i> Les dates sont vérifiées avant l’envoi. Votre demande sera confirmée par notre équipe.</p>
+        <div class="produit-email-row">
+          <label>Nom</label>
+          <input type="text" name="client_name" placeholder="Votre nom" value="<?= htmlspecialchars($_SESSION['client_name'] ?? '') ?>" required>
+        </div>
         <div class="produit-email-row">
           <label>Email</label>
-          <input type="email" name="email" placeholder="votre@email.com" required>
+          <input type="email" name="email" placeholder="votre@email.com" value="<?= htmlspecialchars($_SESSION['client_email'] ?? '') ?>" required>
         </div>
         <button type="submit" class="produit-reserver"><i class="ph ph-fill ph-calendar-check" aria-hidden="true"></i> Réserver</button>
       </form>

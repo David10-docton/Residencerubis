@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['panier_submit'])) {
       } else {
         $msg = "Demande de réservation groupée depuis le site :\n\n"
           . implode("\n", $lines) . "\n\n"
-          . 'Total estimé : ' . number_format($total, 0, ',', ' ') . " F CFA (électricité non comprise)\n"
+          . 'Total estimé : ' . number_format($total, 0, ',', ' ') . " F CFA (électricité à la charge du preneur)\n"
           . "Email client : $email\n";
         if (db_save_contact_message('Réservation groupée', $email, $msg)) {
           @mail($site_email, 'Réservations groupées - Résidence Rubis', $msg, 'From: ' . $site_email);

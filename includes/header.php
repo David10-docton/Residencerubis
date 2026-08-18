@@ -41,8 +41,8 @@ $ph_version = filemtime(__DIR__ . '/../vendor/phosphor/style.css');
             </form>
             <button type="button" id="navSearchBtn" class="nav-search-btn" aria-label="Rechercher" aria-expanded="false"><i class="ph ph-fill ph-magnifying-glass" aria-hidden="true"></i></button>
           </div>
-          <?php if (!empty($_SESSION['client_id'])): ?>
-            <a href="mon-compte.php" class="nav-login-btn"><i class="ph ph-fill ph-user" aria-hidden="true"></i> <?= htmlspecialchars($_SESSION['client_name']) ?></a>
+          <?php if (!empty($_SESSION['admin_logged_in'])): ?>
+            <a href="admin/index.php" class="nav-login-btn"><i class="ph ph-fill ph-user" aria-hidden="true"></i> Se connecter</a>
             <a href="mon-compte.php?action=logout" class="nav-logout-link">Déconnexion</a>
           <?php else: ?>
             <a href="mon-compte.php" class="nav-login-btn"><i class="ph ph-fill ph-user" aria-hidden="true"></i> Se connecter</a>

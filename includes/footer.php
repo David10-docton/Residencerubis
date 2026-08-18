@@ -40,8 +40,7 @@
   <!-- ===== Panier Réservation(s) : bouton flottant + tiroir latéral ===== -->
   <button type="button" class="res-float" id="resFloat" aria-label="Voir mes réservations" aria-expanded="false">
     <i class="ph ph-fill ph-shopping-cart-simple" aria-hidden="true"></i>
-    <span class="res-float-label">Réservation(s)</span>
-    <span class="res-float-badge" id="resBadge" hidden>0</span>
+<span class="res-float-badge" id="resBadge" hidden>0</span>
   </button>
 
   <div class="res-overlay" id="resOverlay" hidden></div>

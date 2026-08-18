@@ -7,7 +7,7 @@ require_once 'includes/header.php';
 
 <section class="about-hero" style="background-image:url('<?= htmlspecialchars($about_image) ?>')">
   <div class="container">
-    <span class="section-tag"><i class="ph ph-fill ph-gem" aria-hidden="true"></i> À propos de la Résidence Rubis</span>
+    <span class="section-tag"><i class="ph ph-fill ph-diamond" aria-hidden="true"></i> À propos de la Résidence Rubis</span>
     <h1>Vous pouvez compter sur nous pour un cadre de <span>détente parfait</span></h1>
     <p>Une résidence d'exception au cœur de Cotonou, à deux pas de la mer et du quartier des ambassades.</p>
   </div>
@@ -41,7 +41,7 @@ require_once 'includes/header.php';
         <p>Implantés au cœur de Cotonou, non loin du quartier des ambassades, et très proche de la mer, nos appartements vous offrent la liberté de profiter d'un grand espace lors de vos séjours, qu'ils soient :</p>
         <div class="about-feature-box">
           <a href="nos-appartements.php" class="about-feature">
-            <span class="about-feature-icon"><i class="ph ph-fill ph-gem" aria-hidden="true"></i></span>
+            <span class="about-feature-icon"><i class="ph ph-fill ph-diamond" aria-hidden="true"></i></span>
             <span class="about-feature-body"><strong>Séjours personnels</strong><span>Charme du neuf, calme et convivialité</span></span>
             <i class="ph ph-fill ph-arrow-right about-feature-arrow" aria-hidden="true"></i>
           </a>
@@ -71,7 +71,7 @@ require_once 'includes/header.php';
             <span>Wi-Fi gratuit</span>
           </div>
           <div class="about-info-item">
-            <span class="about-info-icon"><i class="ph ph-fill ph-bath" aria-hidden="true"></i></span>
+            <span class="about-info-icon"><i class="ph ph-fill ph-bathtub" aria-hidden="true"></i></span>
             <span>Salle de bain indépendante</span>
           </div>
           <div class="about-info-item">

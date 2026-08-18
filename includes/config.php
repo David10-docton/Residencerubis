@@ -1,12 +1,12 @@
 <?php
 $site_name = "Résidence Rubis";
 $site_tagline = "Vous êtes ici chez vous";
-$site_email = "contact@residencerubis.com";
+$site_email = "residencerubis26@gmail.com";
 $site_phone = "(+229) 01 96 77 13 13";
 $site_address = "Cotonou, Bénin";
 $site_hours = "Lun - Sam : 9h00 - 13h00 & 14h00 - 18h00";
 $rental_type = "Courte et longue durée";
-$electricity_note = "Électricité non comprise (à la charge du locataire).";
+$electricity_note = "Électricité à la charge du preneur.";
 $current_year = date("Y");
 $logo_image = "images/logo.png";
 $car_rental_price = "35 000 XOF / jour";
@@ -17,6 +17,7 @@ $nav_links = [
   ["url" => "nos-appartements.php", "label" => "Nos Appartements"],
   ["url" => "nos-services.php", "label" => "Nos services"],
   ["url" => "decouvrez-le-benin.php", "label" => "Découvrez Le Bénin"],
+  ["url" => "blog.php", "label" => "Blog"],
   ["url" => "contact.php", "label" => "Contact"],
 ];
 
@@ -50,19 +51,21 @@ $apartments = [
     "surface" => "66 m²", "rooms" => "1 chambre – salon",
     "gallery" => "images/site-live/appartements/OCCITANIE",
     "image" => "images/residence/occitanie.jpg",
+    "video_url" => "https://www.youtube.com/embed/kWC07XB8wzE",
     "features" => ['<i class="ph ph-fill ph-waves"></i> Vue sur la Plage', '<i class="ph ph-fill ph-bed"></i> 1 Chambre', '<i class="ph ph-fill ph-snowflake"></i> Climatisation', '<i class="ph ph-fill ph-wifi-high"></i> Wi-Fi gratuit'],
     "description" => "Appartement 2 pièces avec vue sur mer"
   ],
   [
-    "name" => "JASMAIN", "type" => "T3", "price" => "30 000", "price_eur" => "46",
+    "name" => "JASMAIN", "type" => "T3", "price" => "30 500", "price_eur" => "46",
     "surface" => "106 m²", "rooms" => "2 chambres – salon",
     "gallery" => "images/site-live/appartements/JASMAIN",
     "image" => "images/residence/jasmain.jpg",
+    "video_url" => "https://www.youtube.com/embed/JhnCqgLKYQA",
     "features" => ['<i class="ph ph-fill ph-waves"></i> Vue sur la Plage', '<i class="ph ph-fill ph-bed"></i> 2 Chambres', '<i class="ph ph-fill ph-snowflake"></i> Climatisation', '<i class="ph ph-fill ph-wifi-high"></i> Wi-Fi gratuit'],
     "description" => "Appartement 3 pièces spacieux avec vue sur mer"
   ],
   [
-    "name" => "HORTENSIA", "type" => "T3", "price" => "30 000", "price_eur" => "46",
+    "name" => "HORTENSIA", "type" => "T3", "price" => "30 500", "price_eur" => "46",
     "surface" => "106 m²", "rooms" => "2 chambres – salon",
     "gallery" => "images/site-live/appartements/HORTENCIA",
     "image" => "images/residence/hortensia.jpg",

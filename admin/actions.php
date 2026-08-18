@@ -19,18 +19,29 @@ $action = $_POST['action'] ?? '';
 $section = $_POST['section'] ?? '';
 $item = $_POST['item'] ?? '';
 
-$tab = isset($_POST['tab']) && $_POST['tab'] === 'prices' ? '?tab=prices' : '';
+$tab = isset($_POST['tab']) ? '?tab=' . preg_replace('/[^a-z]/', '', $_POST['tab']) : '';
 $anchor = preg_replace('/[^a-z0-9\-]/', '', strtolower($_POST['anchor'] ?? ''));
 if ($anchor !== '' && $tab === '') $tab = '#' . $anchor;
 
-if ($section === '' || $item === '') {
-  redirect_with_message('Paramètres manquants.', 'error', $tab);
+// Les actions blog n'ont pas besoin de section/item
+if (!in_array($action, ['blog_save', 'blog_delete'], true)) {
+  if ($section === '' || $item === '') {
+    redirect_with_message('Paramètres manquants.', 'error', $tab);
+  }
+  $section = preg_replace('/[^a-zA-Z0-9_\-]/', '', $section);
+  $item = preg_replace('/[^a-zA-Z0-9_\-àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ .]/', '', $item);
 }
 
-$section = preg_replace('/[^a-zA-Z0-9_\-]/', '', $section);
-$item = preg_replace('/[^a-zA-Z0-9_\-àâäéèêëîïôöùûüçÀÂÄÉÈÊËÎÏÔÖÙÛÜÇ .]/', '', $item);
-
 switch ($action) {
+
+  case 'booking_status':
+    $booking_id = (int)($_POST['booking_id'] ?? 0);
+    $status = $_POST['status'] ?? '';
+    if ($booking_id <= 0 || !db_update_booking_status($booking_id, $status)) {
+      redirect_with_message('Impossible de mettre à jour le statut de cette réservation.', 'error', '?tab=requests');
+    }
+    redirect_with_message('Statut de la réservation mis à jour.', 'success', '?tab=requests');
+    break;
 
   case 'upload':
     if (empty($_FILES['photo']) || $_FILES['photo']['error'] === UPLOAD_ERR_NO_FILE) {
@@ -124,6 +135,54 @@ switch ($action) {
     db_delete_price($section, $item);
     db_cache_invalidate();
     redirect_with_message('Prix réinitialisé au tarif par défaut.', 'success', '?tab=prices');
+    break;
+
+  case 'blog_save':
+    $id = (int)($_POST['id'] ?? 0);
+    $title = trim($_POST['title'] ?? '');
+    $subtitle = trim($_POST['subtitle'] ?? '');
+    $slug = strtolower(trim(preg_replace('/[^a-z0-9\-]/', '-', strtolower(trim($_POST['slug'] ?? ''))), '-'));
+    $image = trim($_POST['image'] ?? '');
+    $video_url = trim($_POST['video_url'] ?? '');
+    $excerpt = trim($_POST['excerpt'] ?? '');
+    $content = $_POST['content'] ?? '';
+    $published = (int)($_POST['published'] ?? 0);
+
+    if ($title === '' || $slug === '' || $content === '') {
+      redirect_with_message('Le titre, le slug et le contenu sont obligatoires.', 'error', '?tab=blog');
+    }
+    if (mb_strlen($slug) > 255) {
+      redirect_with_message('Le slug est trop long (max 255 caractères).', 'error', '?tab=blog');
+    }
+
+    // Vérifier l'unicité du slug (exclure l'article en cours de modification)
+    $conn = db_connect();
+    if ($conn) {
+      $check = $conn->prepare("SELECT id FROM blog_posts WHERE slug = ? AND id != ?");
+      $check->bind_param('si', $slug, $id);
+      $check->execute();
+      if ($check->get_result()->num_rows > 0) {
+        redirect_with_message('Ce slug existe déjà. Choisissez-en un autre.', 'error', '?tab=blog');
+      }
+    }
+
+    if (db_blog_save($id ?: null, $title, $subtitle, $slug, $image, $excerpt, $content, $published, $video_url)) {
+      redirect_with_message($id ? 'Article mis à jour avec succès !' : 'Article créé avec succès !', 'success', '?tab=blog');
+    } else {
+      redirect_with_message('Une erreur est survenue lors de l\'enregistrement.', 'error', '?tab=blog');
+    }
+    break;
+
+  case 'blog_delete':
+    $id = (int)($_POST['id'] ?? 0);
+    if ($id <= 0) {
+      redirect_with_message('ID invalide.', 'error', '?tab=blog');
+    }
+    if (db_blog_delete($id)) {
+      redirect_with_message('Article supprimé.', 'success', '?tab=blog');
+    } else {
+      redirect_with_message('Impossible de supprimer cet article.', 'error', '?tab=blog');
+    }
     break;
 
   default:
