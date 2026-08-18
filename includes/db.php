@@ -122,6 +122,28 @@ function db_connect() {
 function db_blog_seed() {
   $conn = db_connect();
   if (!$conn) return;
+
+  // Vérifier que la colonne video_url existe ; sinon, recréer la table.
+  $bp_cols = [];
+  $bp_res = @$conn->query("SHOW COLUMNS FROM blog_posts");
+  if ($bp_res) while ($c = $bp_res->fetch_assoc()) $bp_cols[$c['Field']] = true;
+  if (!empty($bp_cols) && !isset($bp_cols['video_url'])) {
+    $conn->query("DROP TABLE IF EXISTS blog_posts");
+    $conn->query("CREATE TABLE blog_posts (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      title VARCHAR(255) NOT NULL,
+      subtitle VARCHAR(255) NOT NULL DEFAULT '',
+      slug VARCHAR(190) NOT NULL UNIQUE,
+      image VARCHAR(500) NOT NULL DEFAULT '',
+      excerpt TEXT NOT NULL,
+      content LONGTEXT NOT NULL,
+      video_url VARCHAR(500) NOT NULL DEFAULT '',
+      published TINYINT(1) NOT NULL DEFAULT 0,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    )");
+  }
+
   $check = $conn->query("SELECT COUNT(*) AS cnt FROM blog_posts");
   if (!$check) return;
   if ((int)$check->fetch_assoc()['cnt'] > 0) return;
