@@ -51,7 +51,7 @@ $apartments = [
     "surface" => "66 m²", "rooms" => "1 chambre – salon",
     "gallery" => "images/site-live/appartements/OCCITANIE",
     "image" => "images/residence/occitanie.jpg",
-    "video_url" => "https://www.youtube.com/embed/kWC07XB8wzE",
+    "video_url" => "https://www.youtube.com/embed/tyvsKxE-eHU",
     "features" => ['<i class="ph ph-fill ph-waves"></i> Vue sur la Plage', '<i class="ph ph-fill ph-bed"></i> 1 Chambre', '<i class="ph ph-fill ph-snowflake"></i> Climatisation', '<i class="ph ph-fill ph-wifi-high"></i> Wi-Fi gratuit'],
     "description" => "Appartement 2 pièces avec vue sur mer"
   ],
@@ -60,7 +60,7 @@ $apartments = [
     "surface" => "106 m²", "rooms" => "2 chambres – salon",
     "gallery" => "images/site-live/appartements/JASMAIN",
     "image" => "images/residence/jasmain.jpg",
-    "video_url" => "https://www.youtube.com/embed/JhnCqgLKYQA",
+    "video_url" => "https://www.youtube.com/embed/NiwHkg_HiP8",
     "features" => ['<i class="ph ph-fill ph-waves"></i> Vue sur la Plage', '<i class="ph ph-fill ph-bed"></i> 2 Chambres', '<i class="ph ph-fill ph-snowflake"></i> Climatisation', '<i class="ph ph-fill ph-wifi-high"></i> Wi-Fi gratuit'],
     "description" => "Appartement 3 pièces spacieux avec vue sur mer"
   ],
