@@ -1,0 +1,298 @@
+/* ============================================================
+ * RESPONSIVE — Compléments pour toutes les sections
+ * ============================================================ */
+
+/* ===== TABLETTE : ≤ 968px ===== */
+@media (max-width: 968px) {
+
+  /* Hero */
+  .hero-slideshow .hero-content {
+    gap: 36px;
+  }
+  .hero-slideshow .hero-booking {
+    max-width: 100%;
+  }
+  .hero-pills {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  /* Atouts */
+  .atouts-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+
+  /* Contact */
+  .contact-grid {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+
+  /* Footer */
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px;
+  }
+
+  /* Blog */
+  .blog-grid {
+    max-width: 100%;
+  }
+
+  /* Article */
+  .article-inner {
+    padding: 36px 28px 44px;
+  }
+}
+
+/* ===== MOBILE : ≤ 768px ===== */
+@media (max-width: 768px) {
+
+  /* Container */
+  .container { padding: 0 18px; }
+
+  /* Hero */
+  .hero-content {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .hero-slideshow .hero-booking {
+    max-width: 100%;
+    padding: 24px;
+  }
+  .hero-text h1 {
+    font-size: 2rem;
+  }
+  .hero-text p {
+    font-size: 0.95rem;
+  }
+  .hero-pills {
+    justify-content: flex-start;
+  }
+
+  /* Section spacing */
+  .section { padding: 60px 0; }
+  .section-header h2 { font-size: 1.6rem; }
+  .section-header p { font-size: 0.92rem; }
+
+  /* Page header */
+  .page-header { padding: 130px 0 36px; }
+  .page-header h1 { font-size: 1.7rem; }
+
+  /* Form rows */
+  .form-row { grid-template-columns: 1fr; gap: 12px; }
+
+  /* Apartments grid */
+  .apartments-grid { grid-template-columns: 1fr; }
+  .apartment-image { height: 240px; }
+
+  /* Testimonials */
+  .testimonials-grid { grid-template-columns: 1fr; }
+
+  /* Footer */
+  .footer-grid { grid-template-columns: 1fr; gap: 28px; }
+  .footer { padding-top: 40px; }
+
+  /* Info banner */
+  .info-banner { padding: 40px 0; }
+  .info-banner h2 { font-size: 1.4rem; }
+  .info-banner .hours { font-size: 0.9rem; }
+
+  /* Reglement */
+  .reglement-card { padding: 28px 20px; }
+  .reglement-item p { font-size: 0.88rem; }
+
+  /* Blog grid */
+  .blog-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .blog-card-image { height: 220px; }
+
+  /* Article */
+  .article-inner {
+    padding: 28px 18px 36px;
+    border-radius: 12px;
+  }
+  .article-title { font-size: 1.5rem; }
+  .article-subtitle { font-size: 0.95rem; }
+  .article-body { font-size: 0.98rem; line-height: 1.75; }
+  .article-body h2 { font-size: 1.25rem; padding-left: 14px; }
+  .article-hero-iframe { border-radius: 12px; }
+  .article-hero-image { border-radius: 12px; }
+  .article-share-links { gap: 10px; }
+  .article-share-btn { width: 40px; height: 40px; }
+
+  /* Search overlay */
+  .search-overlay { padding-top: 14vh; }
+  .search-overlay-form { padding: 4px; }
+  .search-overlay-input { font-size: 1rem; padding: 12px 14px; }
+  .search-overlay-hints { gap: 8px; }
+  .search-overlay-hints a { font-size: 0.75rem; padding: 5px 12px; }
+
+  /* Contact page */
+  .contact-grid { grid-template-columns: 1fr; gap: 28px; }
+  .contact-map iframe { min-height: 260px; }
+
+  /* About page */
+  .about-grid { grid-template-columns: 1fr; gap: 28px; }
+  .about-stats { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .about-info-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  /* Login page */
+  .login-card { margin: 0 16px; }
+
+  /* Produit page */
+  .produit-layout { grid-template-columns: 1fr; }
+  .produit-booking { margin-top: 24px; }
+  .produit-gallery { gap: 8px; }
+
+  /* Reservation drawer */
+  .res-drawer { width: 100%; max-width: 100%; }
+
+  /* Features grid */
+  .features-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+}
+
+/* ===== PETIT MOBILE : ≤ 540px ===== */
+@media (max-width: 540px) {
+
+  .container { padding: 0 16px; }
+
+  /* Hero */
+  .hero-content { gap: 20px; }
+  .hero-slideshow .hero-booking {
+    padding: 20px;
+    border-radius: 16px;
+  }
+  .hero-booking h3 { font-size: 1rem; margin-bottom: 16px; }
+  .hero-text h1 { font-size: 1.65rem; }
+  .hero-buttons { flex-direction: column; }
+  .hero-buttons .btn { width: 100%; justify-content: center; }
+  .hero-pills { gap: 6px; }
+  .hero-pill { font-size: 0.72rem; padding: 6px 12px; }
+
+  /* Section */
+  .section { padding: 48px 0; }
+  .section-header h2 { font-size: 1.4rem; }
+  .section-header p { font-size: 0.88rem; }
+
+  /* Page header */
+  .page-header { padding: 120px 0 30px; }
+  .page-header h1 { font-size: 1.5rem; }
+
+  /* Form */
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 11px 14px;
+    font-size: 15px; /* prevent iOS zoom */
+  }
+
+  /* Buttons */
+  .btn { padding: 12px 24px; font-size: 0.85rem; }
+
+  /* Stats */
+  .about-stats { gap: 8px; }
+  .stat { padding: 10px 6px; }
+  .stat-number { font-size: 1.2rem; }
+
+  /* Apartments */
+  .apartment-image { height: 200px; }
+  .apartment-body { padding: 16px; }
+  .apartment-body h3 { font-size: 1.1rem; }
+  .apartment-price { font-size: 0.75rem; }
+
+  /* Blog */
+  .blog-card-image { height: 180px; }
+  .blog-card-body { padding: 18px; }
+  .blog-card-body h3 { font-size: 1.1rem; }
+  .blog-card-excerpt { font-size: 0.84rem; }
+
+  /* Article */
+  .article-inner {
+    padding: 22px 16px 32px;
+    border-radius: 10px;
+    margin-top: 0;
+  }
+  .article-title { font-size: 1.3rem; }
+  .article-tags { gap: 6px; }
+  .article-tag { font-size: 0.7rem; padding: 4px 10px; }
+  .article-divider { margin: 24px 0; }
+  .article-body { font-size: 0.93rem; line-height: 1.7; }
+  .article-body h2 { font-size: 1.15rem; margin: 24px 0 12px; padding-left: 12px; }
+  .article-body h3 { font-size: 1.05rem; }
+  .article-body p { margin-bottom: 14px; }
+  .article-body img { margin: 16px 0; border-radius: 10px; }
+  .article-share-label { font-size: 0.75rem; }
+  .article-nav-back .btn { padding: 12px 28px; font-size: 0.85rem; }
+
+  /* Search overlay */
+  .search-overlay { padding-top: 10vh; padding: 0 16px; padding-top: 10vh; }
+  .search-overlay-form { border-radius: 12px; padding: 4px; }
+  .search-overlay-input { font-size: 0.95rem; padding: 10px 12px; }
+  .search-overlay-submit { width: 44px; height: 44px; border-radius: 10px; }
+  .search-overlay-close { top: -12px; right: 16px; width: 42px; height: 42px; }
+
+  /* Footer */
+  .footer-grid { gap: 24px; }
+  .footer-bottom { flex-direction: column; text-align: center; gap: 8px; }
+
+  /* Features */
+  .features-grid { grid-template-columns: 1fr; }
+
+  /* Reglement */
+  .reglement-card { padding: 22px 16px; }
+  .reglement-item { gap: 10px; }
+  .reglement-item p { font-size: 0.83rem; }
+
+  /* Mon compte / login */
+  .login-card { padding: 28px 18px 22px; border-radius: 14px; }
+
+  /* Produit */
+  .produit-gallery { gap: 6px; }
+  .produit-main img { border-radius: 10px; }
+  .produit-booking { padding: 20px; }
+
+  /* Account */
+  .account-booking-item { padding: 12px; }
+}
+
+/* ===== TRES PETIT MOBILE : ≤ 400px ===== */
+@media (max-width: 400px) {
+
+  .hero-text h1 { font-size: 1.45rem; }
+  .hero-slideshow .hero-booking { padding: 18px; }
+  .hero-booking h3 { font-size: 0.95rem; }
+
+  .section-header h2 { font-size: 1.3rem; }
+
+  .apartment-image { height: 180px; }
+
+  .article-inner { padding: 18px 14px 28px; }
+  .article-title { font-size: 1.2rem; }
+  .article-body h2 { font-size: 1.1rem; }
+
+  .blog-card-image { height: 160px; }
+
+  .features-grid { grid-template-columns: 1fr; gap: 8px; }
+}
+
+/* ===== TABLETTE LARGE : entre 769px et 1080px ===== */
+@media (min-width: 769px) and (max-width: 1080px) {
+
+  .hero-slideshow .hero-booking {
+    max-width: 440px;
+    padding: 28px;
+  }
+
+  .footer-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ===== DESKTOP : ≥ 1200px — ensure nothing breaks on large screens ===== */
+@media (min-width: 1200px) {
+  .container { max-width: 1140px; }
+}

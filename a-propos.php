@@ -41,7 +41,7 @@ require_once 'includes/header.php';
         <p>Implantés au cœur de Cotonou, non loin du quartier des ambassades, et très proche de la mer, nos appartements vous offrent la liberté de profiter d'un grand espace lors de vos séjours, qu'ils soient :</p>
         <div class="about-feature-box">
           <a href="nos-appartements.php" class="about-feature">
-            <span class="about-feature-icon"><i class="ph ph-fill ph-diamond" aria-hidden="true"></i></span>
+            <span class="about-feature-icon"><i class="ph ph-fill ph-house" aria-hidden="true"></i></span>
             <span class="about-feature-body"><strong>Séjours personnels</strong><span>Charme du neuf, calme et convivialité</span></span>
             <i class="ph ph-fill ph-arrow-right about-feature-arrow" aria-hidden="true"></i>
           </a>

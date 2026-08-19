@@ -9,6 +9,7 @@ load_env_file(__DIR__ . '/../.env');
 
 function db_connect() {
   static $conn = null;
+  static $migrated = false;
   if ($conn instanceof mysqli) return $conn;
 
   // Identifiants MySQL. En local (WAMP) : valeurs par défaut ci-dessous.
@@ -33,6 +34,22 @@ function db_connect() {
     return null;
   }
 
+  // Les CREATE TABLE + migrations ne s'exécutent qu'une seule fois par
+  // processus PHP (static $migrated), puis le cache JSON prend le relais.
+  // Cela évite ~7 requêtes DDL + SHOW COLUMNS à chaque chargement de page.
+  if (!$migrated) {
+    $migrated = true;
+    db_run_migrations($conn);
+  }
+
+  return $conn;
+}
+
+/**
+ * Exécute les CREATE TABLE et migrations une seule fois.
+ * En production, le cache JSON (overrides.json) évite de retomber ici souvent.
+ */
+function db_run_migrations($conn) {
   $conn->query("CREATE TABLE IF NOT EXISTS site_images (
     id INT AUTO_INCREMENT PRIMARY KEY,
     section VARCHAR(50) NOT NULL,
@@ -115,8 +132,6 @@ function db_connect() {
   $bp_res = @$conn->query("SHOW COLUMNS FROM blog_posts");
   if ($bp_res) while ($c = $bp_res->fetch_assoc()) $bp_cols[$c['Field']] = true;
   if (!isset($bp_cols['video_url'])) $conn->query("ALTER TABLE blog_posts ADD COLUMN video_url VARCHAR(500) NOT NULL DEFAULT '' AFTER content");
-
-  return $conn;
 }
 
 function db_blog_seed() {

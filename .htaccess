@@ -4,6 +4,37 @@
 # (ex. ErrorDocument 404 /Residencerubis/404.php).
 ErrorDocument 404 /404.php
 
-# Development mode - no cache
-# Removed mod_headers/mod_expires directives (not enabled in default WAMP)
-# Cache busting handled via PHP filemtime() in header.php
+# ===== Sécurité =====
+
+# Interdire l'accès direct aux fichiers sensibles
+<FilesMatch "\.env$">
+  Require all denied
+</FilesMatch>
+
+<FilesMatch "\.env\.(local|example)$">
+  Require all denied
+</FilesMatch>
+
+# Bloquer l'accès au dossier includes/ (sauf via PHP)
+<IfModule mod_rewrite.c>
+  RewriteRule ^includes/ - [F,L]
+</IfModule>
+
+# Bloquer l'accès au dossier vendor/ (sauf CSS/WOFF)
+<IfModule mod_rewrite.c>
+  RewriteRule ^vendor/(?!phosphor/style\.css|fontawesome/css/|fontawesome/webfonts/|phosphor/Phosphor-.*\.woff2) - [F,L]
+</IfModule>
+
+# Empêcher l'exploration de directory
+Options -Indexes
+
+# Headers de sécurité (si mod_headers est disponible)
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always unset X-Powered-By
+  Header unset Server
+</IfModule>
+
+# Cache busting via PHP filemtime() — pas de directive Expires ici

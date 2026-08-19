@@ -4,6 +4,7 @@ $meta_desc = "Résidence Rubis à Cotonou, Bénin. Appartements meublés de stan
 require_once 'includes/config.php';
 require_once 'includes/db.php';
 require_once 'includes/security.php';
+require_once 'includes/email.php';
 
 $booking_success = '';
 $booking_error = '';
@@ -36,15 +37,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_submit'])) {
       $ok = db_save_booking($apartment, $client_name, $check_in, $check_out, $email, $client_id);
 
       if ($ok) {
-        $subject = 'Nouvelle demande de réservation - Résidence Rubis';
-        $body = "Nouvelle demande de réservation :\n\n"
-              . "Nom : $client_name\n"
-              . "Appartement : $apartment\n"
-              . "Arrivée : $check_in\n"
-              . "Départ : $check_out\n"
-              . "Email : $email\n";
-        @mail($site_email, $subject, $body, 'From: ' . $site_email);
-        $booking_success = 'Merci ! Votre demande de réservation a bien été enregistrée. Nous vous recontacterons rapidement.';
+        $nights = max(1, (int)((strtotime($check_out) - strtotime($check_in)) / 86400));
+        $apt_price = '';
+        foreach ($apartments as $ap) {
+          if ($ap['name'] === $apartment) { $apt_price = $ap['price']; break; }
+        }
+        $price_n = (int)preg_replace('/\D/', '', $apt_price);
+        $total_f = $nights * $price_n;
+
+        // Email de confirmation au client
+        send_booking_confirmation_to_client([
+          'client_name'     => $client_name,
+          'email'           => $email,
+          'apartment'       => $apartment,
+          'check_in'        => $check_in,
+          'check_out'       => $check_out,
+          'nights'          => $nights,
+          'price_per_night' => $apt_price,
+          'total'           => $total_f,
+        ]);
+
+        // Notification à l'admin
+        send_booking_notification_to_admin([
+          'client_name' => $client_name,
+          'email'       => $email,
+          'apartment'   => $apartment,
+          'check_in'    => $check_in,
+          'check_out'   => $check_out,
+          'nights'      => $nights,
+          'total'       => $total_f,
+        ]);
+
+        $booking_success = 'Merci ! Votre demande de réservation a bien été enregistrée. Un email de confirmation vous a été envoyé à ' . htmlspecialchars($email) . '.';
       } else {
         $booking_error = 'Une erreur est survenue lors de l\'enregistrement. Veuillez réessayer ou nous contacter directement.';
       }

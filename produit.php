@@ -3,6 +3,7 @@ $page_title = "Réservation";
 $meta_desc = "Réservez votre appartement meublé à Cotonou, Bénin. Tarifs, types, surfaces et formulaire de réservation.";
 require_once 'includes/config.php';
 require_once 'includes/security.php';
+require_once 'includes/email.php';
 
 $slug = mb_strtolower(trim($_GET['appartement'] ?? ''));
 
@@ -63,22 +64,35 @@ if (($_POST['booking_submit'] ?? '') === '1') {
         $saved = (file_exists(__DIR__ . '/includes/db.php') && function_exists('db_save_booking'))
           ? db_save_booking($apartment['name'], $client_name, $check_in, $check_out, $email, $client_id)
           : false;
-        $subject = "Réservation Résidence Rubis - " . $apartment['name'];
         $nights = max(1, (int)((strtotime($check_out) - strtotime($check_in)) / 86400));
         $price_n = (int)preg_replace('/\D/', '', $apartment['price']);
         $total_f = $nights * $price_n;
-        $body = "Nouvelle demande de réservation\n"
-          . "Nom : $client_name\n"
-          . "Appartement : {$apartment['name']}\n"
-          . "Arrivée : $check_in\n"
-          . "Départ : $check_out\n"
-          . "Nombre de nuits : $nights\n"
-          . "Tarif / nuit : {$apartment['price']} F CFA\n"
-          . "Total estimé : " . number_format($total_f, 0, ',', ' ') . " F CFA (électricité à la charge du preneur)\n"
-          . "Email : $email\n";
-        @mail($site_email, $subject, $body, 'From: ' . $email);
+
+        // Email de confirmation au client
+        send_booking_confirmation_to_client([
+          'client_name'     => $client_name,
+          'email'           => $email,
+          'apartment'       => $apartment['name'],
+          'check_in'        => $check_in,
+          'check_out'       => $check_out,
+          'nights'          => $nights,
+          'price_per_night' => $apartment['price'],
+          'total'           => $total_f,
+        ]);
+
+        // Notification à l'admin
+        send_booking_notification_to_admin([
+          'client_name' => $client_name,
+          'email'       => $email,
+          'apartment'   => $apartment['name'],
+          'check_in'    => $check_in,
+          'check_out'   => $check_out,
+          'nights'      => $nights,
+          'total'       => $total_f,
+        ]);
+
         if ($saved !== false) {
-          $booking_success = 'Votre demande est bien enregistrée. Elle est en attente de confirmation par la Résidence Rubis. Un récapitulatif vous sera envoyé à ' . $email . '.';
+          $booking_success = 'Votre demande est bien enregistrée. Un email de confirmation vous a été envoyé à ' . htmlspecialchars($email) . '.';
         } else {
           $booking_error = 'Une erreur est survenue lors de l\'enregistrement. Veuillez réessayer ou nous contacter directement.';
         }

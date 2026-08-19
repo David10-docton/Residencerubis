@@ -4,6 +4,7 @@ $meta_desc = "Contactez la Résidence Rubis à Cotonou, Bénin. Téléphone, ema
 require_once 'includes/config.php';
 require_once 'includes/db.php';
 require_once 'includes/security.php';
+require_once 'includes/email.php';
 
 $contact_success = '';
 $contact_error = '';
@@ -64,7 +65,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['panier_submit'])) {
     } elseif (!is_array($items) || count($items) === 0) {
       $json['message'] = 'Votre sélection est vide.';
     } else {
-      $lines = [];
+      $lines = [];    // Texte formaté pour l'admin
+      $lines_data = []; // Données structurées pour l'email client
       $total = 0;
       foreach (array_slice($items, 0, 20) as $it) {
         if (!is_array($it)) continue;
@@ -80,6 +82,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['panier_submit'])) {
         $sub = $nights * $price;
         $total += $sub;
         $lines[] = "- $name : du $in au $out ($nights nuit(s)) — " . number_format($sub, 0, ',', ' ') . " F";
+        $lines_data[] = [
+          'name'     => $name,
+          'check_in' => $in,
+          'check_out' => $out,
+          'nights'   => $nights,
+          'price'    => $price,
+          'sub'      => $sub,
+        ];
       }
       if (empty($lines)) {
         $json['message'] = 'Votre sélection est vide.';
@@ -89,8 +99,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['panier_submit'])) {
           . 'Total estimé : ' . number_format($total, 0, ',', ' ') . " F CFA (électricité à la charge du preneur)\n"
           . "Email client : $email\n";
         if (db_save_contact_message('Réservation groupée', $email, $msg)) {
+          // Extraire le nom du client depuis la session ou le premier item
+          $client_name_cart = $_SESSION['client_name'] ?? '';
+          if ($client_name_cart === '' && !empty($lines)) {
+            $client_name_cart = 'Client';
+          }
+
+          // Email de confirmation au client
+          send_cart_confirmation_to_client($lines_data, $email, $client_name_cart, $total);
+
+          // Notification à l'admin
           @mail($site_email, 'Réservations groupées - Résidence Rubis', $msg, 'From: ' . $site_email);
-          $json = ['ok' => true, 'message' => 'Votre demande a bien été envoyée. Nous vous recontacterons rapidement.'];
+          $json = ['ok' => true, 'message' => 'Votre demande a bien été envoyée. Un email de confirmation vous a été envoyé à ' . htmlspecialchars($email) . '.'];
         } else {
           $json['message'] = 'Une erreur est survenue lors de l\'envoi. Veuillez réessayer.';
         }

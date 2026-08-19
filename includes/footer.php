@@ -26,8 +26,12 @@
         </div>
         <div class="footer-map-col">
           <h4>Trouvez-nous sur Google Map</h4>
-          <div class="footer-map">
-            <iframe src="https://maps.google.com/maps?q=R%C3%A9sidence%20rubis&amp;t=m&amp;z=16&amp;output=embed&amp;iwloc=near" width="100%" height="100%" style="border:0;" allowfullscreen loading="lazy" title="Résidence Rubis — Fidjrossè, Cotonou"></iframe>
+          <div class="footer-map" data-map-lazy="https://maps.google.com/maps?q=R%C3%A9sidence%20rubis&amp;t=m&amp;z=16&amp;output=embed&amp;iwloc=near" title="Résidence Rubis — Fidjrossè, Cotonou">
+            <div class="footer-map-placeholder">
+              <i class="ph ph-fill ph-map-pin" aria-hidden="true"></i>
+              <span>Carte Google Map</span>
+              <button type="button" class="btn btn-sm btn-outline" onclick="loadMap(this.parentElement.parentElement)">Charger la carte</button>
+            </div>
           </div>
         </div>
       </div>
@@ -78,7 +82,50 @@
     </div>
   </aside>
 
+  <!-- ===== Fullscreen Search Overlay ===== -->
+  <div class="search-overlay" id="searchOverlay" role="dialog" aria-modal="true" aria-label="Recherche" aria-hidden="true">
+    <div class="search-overlay-bg" id="searchOverlayBg"></div>
+    <div class="search-overlay-content">
+      <button type="button" class="search-overlay-close" id="searchOverlayClose" aria-label="Fermer la recherche">
+        <i class="ph ph-fill ph-x" aria-hidden="true"></i>
+      </button>
+      <div class="search-overlay-inner">
+        <span class="search-overlay-label"><i class="ph ph-fill ph-magnifying-glass" aria-hidden="true"></i> Rechercher</span>
+        <form action="nos-appartements.php" method="GET" role="search" class="search-overlay-form">
+          <input type="search" name="q" class="search-overlay-input" placeholder="Rechercher un appartement, un service..." aria-label="Rechercher" autofocus>
+          <button type="submit" class="search-overlay-submit"><i class="ph ph-fill ph-arrow-right" aria-hidden="true"></i></button>
+        </form>
+        <div class="search-overlay-hints">
+          <a href="nos-appartements.php">Appartements</a>
+          <a href="nos-services.php">Services</a>
+          <a href="contact.php">Contact</a>
+          <a href="blog.php">Blog</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="js/main.js?v=<?= filemtime(__DIR__ . '/../js/main.js') ?>"></script>
+  <script>
+  /* Lazy-load Google Map : ne charge l'iframe que quand l'utilisateur
+     clique sur le bouton ou que la zone entre dans le viewport. */
+  (function(){
+    var mapDiv=document.querySelector('.footer-map[data-map-lazy]');
+    if(!mapDiv)return;
+    function loadMap(){
+      if(mapDiv.dataset.loaded)return;
+      mapDiv.dataset.loaded='1';
+      var src=mapDiv.dataset.mapLazy;
+      mapDiv.innerHTML='<iframe src="'+src+'" width="100%" height="100%" style="border:0;" allowfullscreen loading="lazy" title="Résidence Rubis — Carte"></iframe>';
+    }
+    window.loadMap=loadMap;
+    if('IntersectionObserver'in window){
+      new IntersectionObserver(function(entries){
+        if(entries[0].isIntersecting){loadMap();this.disconnect();}
+      },{rootMargin:'300px 0px'}).observe(mapDiv);
+    }
+  })();
+  </script>
 
 </body>
 </html>

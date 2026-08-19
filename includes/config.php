@@ -202,13 +202,19 @@ $benin_monuments = [
   ],
 ];
 
+/* Cache-busting : ajoute ?v=filemtime aux images locales pour forcer
+   le rechargement côté navigateur après une modification admin. */
+function bust($url) {
+  if ($url === '' || strpos($url, 'http://') === 0 || strpos($url, 'https://') === 0) return $url;
+  $path = strtok($url, '?');
+  $abs = is_file($path) ? $path : (is_file(__DIR__ . '/../' . $path) ? __DIR__ . '/../' . $path : null);
+  if ($abs) $url = $url . '?v=' . filemtime($abs);
+  return $url;
+}
+
 if (file_exists(__DIR__ . '/db.php')) {
   require_once __DIR__ . '/db.php';
   if (function_exists('db_get_overrides')) {
-    // Les surcharges (photos + prix) sont lues depuis un cache JSON,
-    // rafraîchi par la base au plus toutes les 10 min ou après une
-    // modification depuis l'admin (invalidation). Aucune requête MySQL
-    // n'est nécessaire à chaque chargement de page.
     $overrides = db_get_overrides();
 
     if (is_array($overrides)) {
@@ -258,3 +264,20 @@ if (file_exists(__DIR__ . '/db.php')) {
     }
   }
 }
+
+// Cache-busting : on ajoute ?v=filemtime à toutes les images locales
+// pour que le navigateur recharge les fichiers modifiés via l'admin.
+foreach ($apartments as &$a) $a['image'] = bust($a['image']);
+unset($a);
+foreach ($testimonials as &$t) { if (!empty($t['image'])) $t['image'] = bust($t['image']); }
+unset($t);
+foreach ($team as &$m) { if (!empty($m['image'])) $m['image'] = bust($m['image']); }
+unset($m);
+foreach ($benin_monuments as &$m) {
+  foreach ($m['images'] as &$img) $img = bust($img);
+  unset($img);
+}
+unset($m);
+$about_image = bust($about_image);
+$benin_image = bust($benin_image);
+$logo_image = bust($logo_image);

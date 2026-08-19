@@ -39,9 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../vendor/phosphor/style.css">
-  <link rel="stylesheet" href="admin.css?v=7">
+  <link rel="stylesheet" href="admin.css?v=<?= filemtime(__DIR__ . '/admin.css') ?>">
 </head>
-<body class="login-body">
+<body class="login-hero">
   <div class="login-card">
     <div class="login-logo"><i class="ph ph-fill ph-diamond" aria-hidden="true"></i></div>
     <h1>Résidence Rubis</h1>
@@ -55,16 +55,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       <?= csrf_field() ?>
       <div class="form-group">
         <label>Nom d'utilisateur</label>
-        <input type="text" name="username" placeholder="admin" required autofocus>
+        <input type="text" name="username" placeholder="savplus" required autofocus>
       </div>
       <div class="form-group">
         <label>Mot de passe</label>
-        <input type="password" name="password" placeholder="••••••••" required>
+        <div class="password-wrap">
+          <input type="password" name="password" id="admin-password" placeholder="••••••••" required>
+          <button type="button" class="password-toggle" onclick="var p=this.previousElementSibling;p.type=p.type==='password'?'text':'password';this.querySelector('i').classList.toggle('ph-eye');this.querySelector('i').classList.toggle('ph-eye-slash');" aria-label="Afficher le mot de passe"><i class="ph ph-fill ph-eye" aria-hidden="true"></i></button>
+        </div>
       </div>
-      <button type="submit" class="btn">Se connecter</button>
+      <button type="submit" class="btn btn-primary login-submit">Se connecter</button>
     </form>
 
-    <a href="../index.php" class="back-link"><i class="ph ph-fill ph-arrow-left" aria-hidden="true"></i> Retour au site</a>
+    <a href="../index.php" class="login-back"><i class="ph ph-fill ph-arrow-left" aria-hidden="true"></i> Retour au site</a>
   </div>
 </body>
 </html>

@@ -1,6 +1,12 @@
 <?php
 require_once 'auth.php';
 admin_require_login();
+
+// Empêcher le navigateur de mettre en cache la page admin
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/security.php';
@@ -42,10 +48,10 @@ foreach (db_get_all_prices() as $row) {
 function add_photo_field(&$photo_fields, $section, $name, $label, $default, $overrides) {
   $key = $section . '::' . $name;
   $raw = isset($overrides[$key]) ? $overrides[$key] : $default;
-  // Depuis admin/, les chemins relatifs racine doivent être préfixés avec ../
+  // Depuis admin/, tout chemin relatif racine est préfixé avec ../
   $current = $raw;
-  if ($raw !== '' && strpos($raw, 'http://') !== 0 && strpos($raw, 'https://') !== 0 && strpos($raw, 'uploads/') !== 0 && is_file(__DIR__ . '/../' . $raw)) {
-    $current = '../' . $raw;
+  if ($raw !== '' && strpos($raw, 'http://') !== 0 && strpos($raw, 'https://') !== 0) {
+    $current = '../' . ltrim($raw, '/');
   }
   $photo_fields[$key] = [
     'section' => $section,
@@ -140,12 +146,17 @@ $car_prices = [
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../vendor/phosphor/style.css">
-  <link rel="stylesheet" href="admin.css?v=7">
+  <link rel="stylesheet" href="admin.css?v=<?= filemtime(__DIR__ . '/admin.css') ?>">
 </head>
 <body>
   <nav class="admin-nav">
     <div class="admin-nav-inner">
-      <div class="admin-nav-brand"><i class="ph ph-fill ph-diamond" aria-hidden="true"></i> <span>Résidence Rubis</span> <small>Admin</small></div>
+      <div class="admin-nav-brand">
+        <a href="../index.php" target="_blank" class="admin-nav-logo">
+          <img src="<?= htmlspecialchars('../' . ltrim($logo_image, '/')) ?>" alt="<?= htmlspecialchars($site_name) ?>">
+        </a>
+        <span><?= htmlspecialchars($site_name) ?></span> <small>Admin</small>
+      </div>
       <div class="admin-nav-links">
         <a href="index.php" class="<?= $tab === 'photos' ? 'active' : '' ?>"><i class="ph ph-fill ph-camera" aria-hidden="true"></i> Photos</a>
         <a href="index.php?tab=prices" class="<?= $tab === 'prices' ? 'active' : '' ?>"><i class="ph ph-fill ph-money" aria-hidden="true"></i> Prix</a>
@@ -478,7 +489,11 @@ $car_prices = [
             <div class="photo-card">
               <div class="photo-thumb">
                 <img src="<?= htmlspecialchars($field['current']) ?>" alt="<?= htmlspecialchars($field['label']) ?>"
-                     onerror="this.parentElement.classList.add('img-error'); this.style.display='none';">
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <div class="photo-thumb-fallback">
+                  <i class="ph ph-fill ph-image" aria-hidden="true"></i>
+                  <span>Image introuvable</span>
+                </div>
                 <?php if ($field['custom']): ?>
                   <span class="photo-badge">Personnalisée</span>
                 <?php endif; ?>

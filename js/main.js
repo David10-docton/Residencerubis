@@ -308,22 +308,32 @@ document.addEventListener('DOMContentLoaded', () => {
     restartBuilding();
   }
 
-  const navSearch = document.getElementById('navSearch');
+  /* ===== Fullscreen Search Overlay ===== */
+  const searchOverlay = document.getElementById('searchOverlay');
+  const searchOverlayBg = document.getElementById('searchOverlayBg');
+  const searchOverlayClose = document.getElementById('searchOverlayClose');
+  const searchOverlayInput = searchOverlay ? searchOverlay.querySelector('.search-overlay-input') : null;
   const navSearchBtn = document.getElementById('navSearchBtn');
-  if (navSearch && navSearchBtn) {
-    navSearchBtn.addEventListener('click', () => {
-      const isOpen = navSearch.classList.toggle('open');
-      if (isOpen) {
-        const input = navSearch.querySelector('input');
-        if (input) input.focus();
-      }
-    });
-    document.addEventListener('click', (e) => {
-      if (!navSearch.contains(e.target) && navSearch.classList.contains('open')) {
-        navSearch.classList.remove('open');
-      }
-    });
+
+  function openSearchOverlay() {
+    if (!searchOverlay) return;
+    searchOverlay.classList.add('open');
+    searchOverlay.setAttribute('aria-hidden', 'false');
+    document.body.style.overflow = 'hidden';
+    setTimeout(() => { if (searchOverlayInput) searchOverlayInput.focus(); }, 300);
   }
+  function closeSearchOverlay() {
+    if (!searchOverlay) return;
+    searchOverlay.classList.remove('open');
+    searchOverlay.setAttribute('aria-hidden', 'true');
+    document.body.style.overflow = '';
+  }
+  if (navSearchBtn) navSearchBtn.addEventListener('click', openSearchOverlay);
+  if (searchOverlayClose) searchOverlayClose.addEventListener('click', closeSearchOverlay);
+  if (searchOverlayBg) searchOverlayBg.addEventListener('click', closeSearchOverlay);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && searchOverlay && searchOverlay.classList.contains('open')) closeSearchOverlay();
+  });
 
   const produitMain = document.querySelector('.produit-main img');
   const produitThumbs = document.querySelectorAll('.produit-thumb');

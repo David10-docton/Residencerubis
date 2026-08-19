@@ -8,7 +8,8 @@ $login_error = '';
 
 // --- Déconnexion ---
 if (($_GET['action'] ?? '') === 'logout') {
-  unset($_SESSION['admin_logged_in'], $_SESSION['admin_user']);
+  session_regenerate_id(true);
+  unset($_SESSION['admin_logged_in'], $_SESSION['admin_user'], $_SESSION['csrf_token']);
   header('Location: mon-compte.php');
   exit;
 }
@@ -22,19 +23,21 @@ if (!empty($_SESSION['admin_logged_in'])) {
 // --- Connexion ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login_submit'])) {
   if (honeypot_filled()) {
-    $_SESSION['admin_logged_in'] = true;
-    $_SESSION['admin_user'] = 'savplus';
-    header('Location: admin/index.php');
-    exit;
+    // Robot détecté : on feint le succès sans rien enregistrer.
+    $login_error = 'Identifiants incorrects.';
   } elseif (!csrf_verify()) {
     $login_error = 'Session expirée : rechargez la page et réessayez.';
-  } elseif (submission_too_fast()) {
-    $login_error = 'Veuillez patienter quelques secondes avant de renvoyer le formulaire.';
+  } elseif (submission_too_fast(2)) {
+    $login_error = 'Trop de tentatives : veuillez patienter avant de réessayer.';
   } else {
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
 
-    if ($username === 'savplus' && $password === 's@vplus') {
+    // Requérir les identifiants depuis admin/auth.php (plus de credentials en dur ici)
+    require_once __DIR__ . '/admin/auth.php';
+    $user_ok = hash_equals(ADMIN_USER, $username);
+    $pass_ok = hash_equals(ADMIN_PASS, $password) || password_verify($password, ADMIN_PASS_HASH);
+    if ($user_ok && $pass_ok) {
       session_regenerate_id(true);
       $_SESSION['admin_logged_in'] = true;
       $_SESSION['admin_user'] = $username;
@@ -71,7 +74,10 @@ require_once 'includes/header.php';
         </div>
         <div class="form-group">
           <label for="login-password"><i class="ph ph-fill ph-lock-simple" aria-hidden="true"></i> Mot de passe</label>
-          <input type="password" name="password" id="login-password" placeholder="••••••••" required>
+          <div class="password-wrap">
+            <input type="password" name="password" id="login-password" placeholder="••••••••" required>
+            <button type="button" class="password-toggle" onclick="var p=this.previousElementSibling; p.type=p.type==='password'?'text':'password'; this.querySelector('i').classList.toggle('ph-eye'); this.querySelector('i').classList.toggle('ph-eye-slash');" aria-label="Afficher le mot de passe"><i class="ph ph-fill ph-eye" aria-hidden="true"></i></button>
+          </div>
         </div>
         <button type="submit" class="btn btn-primary login-submit">
           <i class="ph ph-fill ph-sign-in" aria-hidden="true"></i> Se connecter

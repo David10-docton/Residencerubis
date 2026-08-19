@@ -7,6 +7,8 @@ require_once 'includes/security.php';
 
 db_blog_seed();
 $posts = db_blog_get_all(true);
+foreach ($posts as &$bp) { if (!empty($bp['image'])) $bp['image'] = bust($bp['image']); }
+unset($bp);
 require_once 'includes/header.php';
 ?>
 

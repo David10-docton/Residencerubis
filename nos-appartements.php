@@ -94,7 +94,7 @@ require_once 'includes/header.php';
             <?php endforeach; ?>
           </div>
           <p class="apartment-rental"><i class="ph ph-fill ph-calendar-check" aria-hidden="true"></i> Courte &amp; longue durée</p>
-          <a href="produit.php?appartement=<?= urlencode(mb_strtolower($a['name'])) ?>" class="btn btn-primary"><i class="ph ph-fill ph-calendar-check" aria-hidden="true"></i> Voir plus</a>
+          <a href="produit.php?appartement=<?= urlencode(mb_strtolower($a['name'])) ?>" class="btn btn-primary"><i class="ph ph-fill ph-arrow-right" aria-hidden="true"></i> Voir plus</a>
         </div>
       </div>
       <?php endforeach; ?>

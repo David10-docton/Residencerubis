@@ -2,6 +2,7 @@
 require_once 'auth.php';
 admin_require_login();
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/email.php';
 
 function redirect_with_message($msg, $type = 'success', $suffix = '') {
   $_SESSION['admin_msg'] = $msg;
@@ -40,7 +41,28 @@ switch ($action) {
     if ($booking_id <= 0 || !db_update_booking_status($booking_id, $status)) {
       redirect_with_message('Impossible de mettre à jour le statut de cette réservation.', 'error', '?tab=requests');
     }
-    redirect_with_message('Statut de la réservation mis à jour.', 'success', '?tab=requests');
+
+    // Récupérer les infos de la réservation pour envoyer la notification
+    $conn_book = db_connect();
+    if ($conn_book) {
+      $bk = $conn_book->prepare("SELECT name, email, apartment, check_in, check_out FROM bookings WHERE id = ?");
+      $bk->bind_param('i', $booking_id);
+      $bk->execute();
+      $bk_res = $bk->get_result();
+      $bk_row = $bk_res->fetch_assoc();
+      if ($bk_row && !empty($bk_row['email'])) {
+        send_booking_status_update([
+          'client_name' => $bk_row['name'],
+          'email'       => $bk_row['email'],
+          'apartment'   => $bk_row['apartment'],
+          'check_in'    => $bk_row['check_in'],
+          'check_out'   => $bk_row['check_out'],
+          'status'      => $status,
+        ]);
+      }
+    }
+
+    redirect_with_message('Statut de la réservation mis à jour. Le client a été notifié par email.', 'success', '?tab=requests');
     break;
 
   case 'upload':

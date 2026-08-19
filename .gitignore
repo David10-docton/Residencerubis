@@ -1,7 +1,8 @@
 # Secrets — ne jamais versionner
 .env
 .env.local
-*.env
+.env.production
+!.env.example
 
 # Cache généré par le site
 includes/cache/
