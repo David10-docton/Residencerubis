@@ -85,7 +85,6 @@
 
   /* Apartments grid */
   .apartments-grid { grid-template-columns: 1fr; }
-  .apartment-image { height: 240px; }
 
   /* Testimonials */
   .testimonials-grid { grid-template-columns: 1fr; }
@@ -108,7 +107,6 @@
     grid-template-columns: 1fr;
     gap: 24px;
   }
-  .blog-card-image { height: 220px; }
 
   /* Article */
   .article-inner {
@@ -199,13 +197,11 @@
   .stat-number { font-size: 1.2rem; }
 
   /* Apartments */
-  .apartment-image { height: 200px; }
   .apartment-body { padding: 16px; }
   .apartment-body h3 { font-size: 1.1rem; }
   .apartment-price { font-size: 0.75rem; }
 
   /* Blog */
-  .blog-card-image { height: 180px; }
   .blog-card-body { padding: 18px; }
   .blog-card-body h3 { font-size: 1.1rem; }
   .blog-card-excerpt { font-size: 0.84rem; }
@@ -268,15 +264,62 @@
 
   .section-header h2 { font-size: 1.3rem; }
 
-  .apartment-image { height: 180px; }
-
   .article-inner { padding: 18px 14px 28px; }
   .article-title { font-size: 1.2rem; }
   .article-body h2 { font-size: 1.1rem; }
 
-  .blog-card-image { height: 160px; }
-
   .features-grid { grid-template-columns: 1fr; gap: 8px; }
+}
+
+/* ===== TRES TRES PETIT MOBILE : ≤ 360px (Galaxy Fold, etc.) ===== */
+@media (max-width: 360px) {
+
+  .container { padding: 0 12px; }
+
+  .hero-text h1 { font-size: 1.3rem; }
+  .hero-slideshow .hero-booking { padding: 14px; border-radius: 12px; }
+  .hero-booking h3 { font-size: 0.88rem; }
+  .hero-pills { gap: 4px; }
+  .hero-pill { font-size: 0.65rem; padding: 4px 8px; }
+
+  .section { padding: 36px 0; }
+  .section-header h2 { font-size: 1.2rem; }
+  .section-header p { font-size: 0.82rem; }
+
+  .page-header { padding: 110px 0 24px; }
+  .page-header h1 { font-size: 1.35rem; }
+
+  .btn { padding: 10px 20px; font-size: 0.8rem; }
+
+  .apartment-body { padding: 12px; }
+  .apartment-body h3 { font-size: 1rem; }
+  .apartment-price { font-size: 0.7rem; }
+
+  .blog-card-body { padding: 14px; }
+  .blog-card-body h3 { font-size: 1rem; }
+  .blog-card-excerpt { font-size: 0.78rem; }
+
+  .article-inner { padding: 16px 12px 24px; }
+  .article-title { font-size: 1.1rem; }
+  .article-body { font-size: 0.88rem; }
+  .article-body h2 { font-size: 1.05rem; }
+
+  .search-overlay { padding-top: 8vh; padding: 0 12px; padding-top: 8vh; }
+  .search-overlay-input { font-size: 0.88rem; padding: 8px 10px; }
+
+  .stat { padding: 8px 4px; }
+  .stat-number { font-size: 1.05rem; }
+  .about-stats { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+
+  .footer-grid { gap: 20px; }
+  .footer-brand p { font-size: 0.78rem; }
+
+  .reglement-card { padding: 18px 12px; }
+  .reglement-item p { font-size: 0.78rem; }
+
+  .login-card { padding: 22px 14px 18px; margin: 0 8px; }
+
+  .produit-booking { padding: 16px; }
 }
 
 /* ===== TABLETTE LARGE : entre 769px et 1080px ===== */
@@ -295,4 +338,44 @@
 /* ===== DESKTOP : ≥ 1200px — ensure nothing breaks on large screens ===== */
 @media (min-width: 1200px) {
   .container { max-width: 1140px; }
+}
+
+/* ===== GRAND ECRAN : ≥ 1440px ===== */
+@media (min-width: 1440px) {
+  .container { max-width: 1320px; }
+
+  .hero-text h1 { font-size: clamp(2.2rem, 3vw, 3.2rem); }
+  .hero-text p { font-size: clamp(1rem, 1.2vw, 1.15rem); }
+
+  .section-header h2 { font-size: clamp(1.8rem, 2.2vw, 2.2rem); }
+  .section-header p { font-size: clamp(0.95rem, 1.1vw, 1.08rem); }
+
+  .page-header h1 { font-size: clamp(2rem, 2.5vw, 2.6rem); }
+
+  .apartment-image { height: 300px; }
+  .blog-card-image { height: 270px; }
+
+  .produit-main img { max-height: 520px; }
+
+  .footer-grid { gap: 40px; }
+}
+
+/* ===== TRES GRAND ECRAN : ≥ 1920px (4K, ultrawide) ===== */
+@media (min-width: 1920px) {
+  .container { max-width: 1500px; }
+
+  .hero-text h1 { font-size: clamp(2.5rem, 2.8vw, 3.5rem); }
+  .hero-text p { font-size: clamp(1.05rem, 1.1vw, 1.25rem); }
+
+  .section { padding: 100px 0; }
+  .section-header h2 { font-size: clamp(2rem, 2vw, 2.5rem); }
+
+  .apartment-image { height: 340px; }
+  .blog-card-image { height: 300px; }
+
+  .about-story-media img { min-height: 440px; }
+
+  .produit-main img { max-height: 600px; }
+
+  .footer-grid { max-width: 1500px; margin: 0 auto; }
 }

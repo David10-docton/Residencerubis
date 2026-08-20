@@ -227,7 +227,7 @@ a, p, h1, h2, h3, h4, span { overflow-wrap: break-word; }
 .hero::before {
   content: ''; position: absolute;
   right: -10%; top: -20%;
-  width: 800px; height: 800px; border-radius: 50%;
+  width: min(800px, 50vw); height: min(800px, 50vw); border-radius: 50%;
   background: radial-gradient(circle, rgba(220, 177, 89, 0.1) 0%, transparent 65%);
   pointer-events: none;
   animation: heroGlow 8s ease-in-out infinite alternate;
@@ -236,7 +236,7 @@ a, p, h1, h2, h3, h4, span { overflow-wrap: break-word; }
 .hero::after {
   content: ''; position: absolute;
   left: -5%; bottom: -15%;
-  width: 600px; height: 600px; border-radius: 50%;
+  width: min(600px, 40vw); height: min(600px, 40vw); border-radius: 50%;
   background: radial-gradient(circle, rgba(184, 93, 63, 0.06) 0%, transparent 65%);
   pointer-events: none;
   animation: heroGlow2 10s ease-in-out infinite alternate;
@@ -260,7 +260,7 @@ a, p, h1, h2, h3, h4, span { overflow-wrap: break-word; }
 
 .hero-text h1 {
   font-family: var(--font-display);
-  font-size: 3.4rem; font-weight: 700; color: var(--text);
+  font-size: clamp(1.8rem, 4.5vw, 3.4rem); font-weight: 700; color: var(--text);
   line-height: 1.15; margin-bottom: 18px;
 }
 
@@ -352,7 +352,7 @@ a, p, h1, h2, h3, h4, span { overflow-wrap: break-word; }
 
 .section-header h2 {
   font-family: var(--font-display);
-  font-size: 2.4rem; font-weight: 700; color: var(--text);
+  font-size: clamp(1.5rem, 3vw, 2.4rem); font-weight: 700; color: var(--text);
   margin-bottom: 12px; line-height: 1.25;
 }
 
@@ -447,7 +447,7 @@ a, p, h1, h2, h3, h4, span { overflow-wrap: break-word; }
 }
 
 .apartment-image {
-  height: 240px; background-size: cover; background-position: center;
+  height: clamp(200px, 28vw, 320px); background-size: cover; background-position: center;
   position: relative; display: flex; align-items: flex-end;
   padding: 20px; overflow: hidden;
   background-color: #EFE8DF;
@@ -672,7 +672,7 @@ a, p, h1, h2, h3, h4, span { overflow-wrap: break-word; }
 
 .about-story-media img {
   width: 100%; height: 100%;
-  min-height: 380px;
+  min-height: clamp(240px, 30vw, 380px);
   object-fit: cover; display: block;
   transition: var(--transition);
   position: relative; z-index: 1;
@@ -869,7 +869,7 @@ a, p, h1, h2, h3, h4, span { overflow-wrap: break-word; }
 
 .page-header h1 {
   font-family: var(--font-display);
-  font-size: 2.8rem; font-weight: 700; margin-bottom: 10px;
+  font-size: clamp(1.6rem, 3.5vw, 2.8rem); font-weight: 700; margin-bottom: 10px;
 }
 
 .page-header p { color: var(--text-light); font-size: 1.05rem; }
@@ -1410,7 +1410,6 @@ html:not(.js-anim) .animate-on-scroll {
   .hero-text h1 { font-size: 1.5rem; }
   .hero-buttons { flex-direction: column; }
   .hero-booking h3 { font-size: 1.05rem; }
-  .apartment-image { height: 210px; }
   .slider { height: 260px; }
   .building-slider { height: 280px; }
   .building-caption { left: 20px; bottom: 20px; }
@@ -3015,8 +3014,8 @@ html:not(.js-anim) .animate-on-scroll {
   position: absolute;
   bottom: -70px;
   right: -50px;
-  width: 240px;
-  height: 240px;
+  width: min(240px, 30vw);
+  height: min(240px, 30vw);
   border-radius: 50%;
   border: 30px solid rgba(255, 255, 255, 0.04);
   pointer-events: none;
@@ -4414,7 +4413,7 @@ html:not(.js-anim) .animate-on-scroll {
 }
 
 .blog-card-image {
-  height: 340px;
+  height: clamp(200px, 30vw, 340px);
   background-size: cover;
   background-position: center;
   position: relative;
@@ -4589,7 +4588,7 @@ html:not(.js-anim) .animate-on-scroll {
 
 .article-title {
   font-family: var(--font-display);
-  font-size: 2.4rem;
+  font-size: clamp(1.4rem, 3vw, 2.4rem);
   font-weight: 700;
   line-height: 1.25;
   color: var(--heading, #1a1a1a);
@@ -4841,9 +4840,6 @@ html:not(.js-anim) .animate-on-scroll {
 @media (max-width: 600px) {
   .blog-grid {
     gap: 28px;
-  }
-  .blog-card-image {
-    height: 220px;
   }
   .blog-card-body {
     padding: 22px 20px 26px;
