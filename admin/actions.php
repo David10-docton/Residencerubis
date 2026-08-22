@@ -44,8 +44,9 @@ switch ($action) {
 
     // Récupérer les infos de la réservation pour envoyer la notification
     $conn_book = db_connect();
+    $bk_row = null;
     if ($conn_book) {
-      $bk = $conn_book->prepare("SELECT name, email, apartment, check_in, check_out FROM bookings WHERE id = ?");
+      $bk = $conn_book->prepare("SELECT name, email, phone, apartment, check_in, check_out FROM bookings WHERE id = ?");
       $bk->bind_param('i', $booking_id);
       $bk->execute();
       $bk_res = $bk->get_result();
@@ -62,6 +63,13 @@ switch ($action) {
       }
     }
 
+    // Construire le lien WhatsApp pour envoyer la notification
+    $whatsapp_link = '';
+    if ($bk_row && !empty($bk_row['phone'])) {
+      $whatsapp_link = whatsapp_status_url($bk_row['phone'], $status, $bk_row['apartment'] ?? '');
+    }
+    // Stocker le lien WhatsApp séparément pour un rendu sécurisé dans le template
+    $_SESSION['admin_whatsapp_link'] = $whatsapp_link;
     redirect_with_message('Statut de la réservation mis à jour. Le client a été notifié par email.', 'success', '?tab=requests');
     break;
 

@@ -10,14 +10,20 @@ header('Expires: 0');
 require_once __DIR__ . '/../includes/config.php';
 require_once __DIR__ . '/../includes/db.php';
 require_once __DIR__ . '/../includes/security.php';
+require_once __DIR__ . '/../includes/email.php';
 
 $action_msg = '';
 $action_type = '';
+$whatsapp_link = '';
 
 if (isset($_SESSION['admin_msg'])) {
   $action_msg = $_SESSION['admin_msg'];
   $action_type = $_SESSION['admin_type'] ?? 'success';
   unset($_SESSION['admin_msg'], $_SESSION['admin_type']);
+}
+if (isset($_SESSION['admin_whatsapp_link'])) {
+  $whatsapp_link = $_SESSION['admin_whatsapp_link'];
+  unset($_SESSION['admin_whatsapp_link']);
 }
 
 $tab = $_GET['tab'] ?? 'photos';
@@ -185,6 +191,13 @@ $car_prices = [
     <?php if ($action_msg): ?>
       <div class="alert alert-<?= htmlspecialchars($action_type) ?>"><?= htmlspecialchars($action_msg) ?></div>
     <?php endif; ?>
+    <?php if ($whatsapp_link): ?>
+      <div style="margin-top:8px;">
+        <a href="<?= htmlspecialchars($whatsapp_link) ?>" target="_blank" rel="noopener" style="display:inline-block;padding:10px 20px;background:#25D366;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;font-size:14px;">
+          <i class="ph ph-fill ph-whatsapp-logo" style="margin-right:6px;"></i> Envoyer la notification WhatsApp au client
+        </a>
+      </div>
+    <?php endif; ?>
 
     <?php if ($tab === 'prices'): ?>
 
@@ -296,45 +309,126 @@ $car_prices = [
 
     <?php elseif ($tab === 'requests'): ?>
 
+      <?php
+        $sc = ['pending' => 0, 'confirmed' => 0, 'cancelled' => 0, 'completed' => 0];
+        foreach ($bookings as $b) { $s = $b['status'] ?? 'pending'; if (isset($sc[$s])) $sc[$s]++; else $sc['pending']++; }
+        $total_bookings = count($bookings);
+        $status_labels = ['pending' => 'En attente', 'confirmed' => 'Confirmée', 'cancelled' => 'Annulée', 'completed' => 'Terminée'];
+        $status_icons = ['pending' => 'ph-clock', 'confirmed' => 'ph-check-circle', 'cancelled' => 'ph-x-circle', 'completed' => 'ph-flag-banner'];
+      ?>
+
+      <!-- Cartes de statistiques -->
+      <div class="booking-stats">
+        <div class="stat-card">
+          <div class="stat-card-icon all"><i class="ph ph-fill ph-squares-four"></i></div>
+          <div class="stat-card-info"><span class="stat-card-label">Total</span><span class="stat-card-value"><?= $total_bookings ?></span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon pending"><i class="ph ph-fill ph-clock"></i></div>
+          <div class="stat-card-info"><span class="stat-card-label">En attente</span><span class="stat-card-value"><?= $sc['pending'] ?></span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon confirmed"><i class="ph ph-fill ph-check-circle"></i></div>
+          <div class="stat-card-info"><span class="stat-card-label">Confirmées</span><span class="stat-card-value"><?= $sc['confirmed'] ?></span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon cancelled"><i class="ph ph-fill ph-x-circle"></i></div>
+          <div class="stat-card-info"><span class="stat-card-label">Annulées</span><span class="stat-card-value"><?= $sc['cancelled'] ?></span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card-icon completed"><i class="ph ph-fill ph-flag-banner"></i></div>
+          <div class="stat-card-info"><span class="stat-card-label">Terminées</span><span class="stat-card-value"><?= $sc['completed'] ?></span></div>
+        </div>
+      </div>
+
       <section class="admin-section">
         <div class="admin-section-head">
           <div>
             <h2><i class="ph ph-fill ph-calendar-check" aria-hidden="true"></i> Réservations</h2>
-            <p>Les demandes en attente bloquent les dates jusqu’à leur confirmation ou annulation.</p>
+            <p>Gérez les demandes de réservation de vos clients.</p>
           </div>
         </div>
+
+        <!-- Filtres par statut -->
+        <div class="booking-tabs">
+          <button class="booking-tab active" onclick="filterBookings('all')"><i class="ph ph-fill ph-squares-four" aria-hidden="true"></i> <span class="tab-label">Toutes</span> <span class="tab-count"><?= $total_bookings ?></span></button>
+          <button class="booking-tab" onclick="filterBookings('pending')"><i class="ph ph-fill ph-clock" aria-hidden="true"></i> <span class="tab-label">En attente</span> <span class="tab-count"><?= $sc['pending'] ?></span></button>
+          <button class="booking-tab" onclick="filterBookings('confirmed')"><i class="ph ph-fill ph-check-circle" aria-hidden="true"></i> <span class="tab-label">Confirmées</span> <span class="tab-count"><?= $sc['confirmed'] ?></span></button>
+          <button class="booking-tab" onclick="filterBookings('cancelled')"><i class="ph ph-fill ph-x-circle" aria-hidden="true"></i> <span class="tab-label">Annulées</span> <span class="tab-count"><?= $sc['cancelled'] ?></span></button>
+          <button class="booking-tab" onclick="filterBookings('completed')"><i class="ph ph-fill ph-flag-banner" aria-hidden="true"></i> <span class="tab-label">Terminées</span> <span class="tab-count"><?= $sc['completed'] ?></span></button>
+        </div>
+
         <?php if (!$bookings): ?>
-          <div class="admin-note">Aucune réservation reçue pour le moment.</div>
+          <div class="booking-empty">
+            <i class="ph ph-fill ph-calendar-blank"></i>
+            <p>Aucune réservation pour le moment.</p>
+          </div>
         <?php else: ?>
-          <div class="table-wrap">
-            <table class="admin-table">
+          <div class="booking-table-wrap">
+            <table class="booking-table">
               <thead>
-                <tr><th>Nom</th><th>Appartement</th><th>Arrivée</th><th>Départ</th><th>Email</th><th>Statut</th><th>Reçu le</th></tr>
+                <tr>
+                  <th>Client</th>
+                  <th>Appartement</th>
+                  <th>Séjour</th>
+                  <th>Téléphone</th>
+                  <th>Statut</th>
+                  <th>Action</th>
+                </tr>
               </thead>
               <tbody>
                 <?php foreach ($bookings as $b): ?>
-                  <tr>
-                    <td><?= htmlspecialchars($b['name']) ?></td>
-                    <td><?= htmlspecialchars($b['apartment']) ?></td>
-                    <td><?= htmlspecialchars($b['check_in']) ?></td>
-                    <td><?= htmlspecialchars($b['check_out']) ?></td>
-                    <td><a href="mailto:<?= htmlspecialchars($b['email']) ?>"><?= htmlspecialchars($b['email']) ?></a></td>
+                  <?php $booking_status = $b['status'] ?? 'pending'; ?>
+                  <tr data-status="<?= htmlspecialchars($booking_status) ?>">
                     <td>
-                      <form method="POST" action="actions.php" class="booking-status-form">
+                      <div class="client-cell">
+                        <div class="client-avatar <?= htmlspecialchars($booking_status) ?>"><?= strtoupper(mb_substr(htmlspecialchars($b['name']), 0, 1)) ?></div>
+                        <div>
+                          <div class="client-name"><?= htmlspecialchars($b['name']) ?></div>
+                          <div class="client-email"><a href="mailto:<?= htmlspecialchars($b['email']) ?>"><?= htmlspecialchars($b['email']) ?></a></div>
+                        </div>
+                      </div>
+                    </td>
+                    <td><strong><?= htmlspecialchars($b['apartment']) ?></strong></td>
+                    <td class="date-cell">
+                      <?= date('d/m/Y', strtotime($b['check_in'])) ?> → <?= date('d/m/Y', strtotime($b['check_out'])) ?>
+                    </td>
+                    <td>
+                      <?php if (!empty($b['phone'])): ?>
+                        <div style="display:flex;align-items:center;gap:6px;">
+                          <span><?= htmlspecialchars($b['phone']) ?></span>
+                          <?php $wa_url = whatsapp_status_url($b['phone'], $booking_status, $b['apartment']); ?>
+                          <?php if ($wa_url): ?>
+                            <a href="<?= htmlspecialchars($wa_url) ?>" target="_blank" rel="noopener" class="whatsapp-btn" title="Envoyer WhatsApp"><i class="ph ph-fill ph-whatsapp-logo"></i></a>
+                          <?php endif; ?>
+                        </div>
+                      <?php else: ?>
+                        <span style="color:var(--text-muted);">—</span>
+                      <?php endif; ?>
+                    </td>
+                    <td>
+                      <span class="status-badge <?= htmlspecialchars($booking_status) ?>">
+                        <i class="ph ph-fill <?= $status_icons[$booking_status] ?? 'ph-clock' ?>"></i>
+                        <?= $status_labels[$booking_status] ?? 'En attente' ?>
+                      </span>
+                    </td>
+                    <td>
+                      <form method="POST" action="actions.php" class="booking-status-form" onsubmit="return confirmBookingStatus(this);">
                         <input type="hidden" name="action" value="booking_status">
                         <?= csrf_field() ?>
                         <input type="hidden" name="section" value="booking">
                         <input type="hidden" name="item" value="<?= (int)$b['id'] ?>">
                         <input type="hidden" name="booking_id" value="<?= (int)$b['id'] ?>">
-                        <select name="status" aria-label="Statut de la réservation <?= htmlspecialchars($b['apartment']) ?>">
-                          <?php foreach (['pending' => 'En attente', 'confirmed' => 'Confirmée', 'cancelled' => 'Annulée', 'completed' => 'Terminée'] as $value => $label): ?>
-                            <option value="<?= $value ?>" <?= ($b['status'] ?? 'pending') === $value ? 'selected' : '' ?>><?= $label ?></option>
-                          <?php endforeach; ?>
-                        </select>
-                        <button type="submit" class="btn btn-outline btn-sm">Mettre à jour</button>
+                        <div class="action-cell">
+                          <select name="status">
+                            <?php foreach ($status_labels as $value => $label): ?>
+                              <option value="<?= $value ?>" <?= $booking_status === $value ? 'selected' : '' ?>><?= $label ?></option>
+                            <?php endforeach; ?>
+                          </select>
+                          <button type="submit" class="btn-status-update"><i class="ph ph-fill ph-check-circle"></i> Mettre à jour</button>
+                        </div>
                       </form>
                     </td>
-                    <td><?= htmlspecialchars($b['created_at']) ?></td>
                   </tr>
                 <?php endforeach; ?>
               </tbody>
@@ -350,21 +444,6 @@ $car_prices = [
             <p>Messages envoyés depuis la page « Contact »</p>
           </div>
         </div>
-        <?php if (!$messages): ?>
-          <div class="admin-note">Aucun message reçu pour le moment.</div>
-        <?php else: ?>
-          <?php foreach ($messages as $m): ?>
-            <div class="message-card">
-              <div class="message-head">
-                <strong><?= htmlspecialchars($m['name']) ?></strong>
-                <a href="mailto:<?= htmlspecialchars($m['email']) ?>"><?= htmlspecialchars($m['email']) ?></a>
-                <span><?= htmlspecialchars($m['created_at']) ?></span>
-              </div>
-              <p><?= nl2br(htmlspecialchars($m['message'])) ?></p>
-            </div>
-          <?php endforeach; ?>
-        <?php endif; ?>
-      </section>
 
     <?php elseif ($tab === 'blog'): ?>
 
@@ -588,6 +667,64 @@ $car_prices = [
       document.getElementById('blog-edit-published').value = published;
       document.getElementById('blog-form-wrap').scrollIntoView({ behavior: 'smooth' });
     }
+
+    var _bookingForm = null;
+    function confirmBookingStatus(form) {
+      _bookingForm = form;
+      var select = form.querySelector('select[name="status"]');
+      var labels = {
+        'pending': '⏳ En attente',
+        'confirmed': '✅ Confirmée',
+        'cancelled': '❌ Annulée',
+        'completed': '🏁 Terminée'
+      };
+      var status = select.value;
+      var label = labels[status] || status;
+      document.getElementById('booking-confirm-text').innerHTML = 'Êtes-vous sûr de vouloir changer le statut vers <strong>\u00AB ' + label + ' \u00BB</strong> ?<br><br><small style="color:#666;">Un email et un message WhatsApp seront envoyés au client.</small>';
+      document.getElementById('booking-confirm-modal').style.display = 'flex';
+      return false;
+    }
+    function bookingConfirmYes() {
+      document.getElementById('booking-confirm-modal').style.display = 'none';
+      if (_bookingForm) { _bookingForm.submit(); }
+    }
+    function bookingConfirmNo() {
+      document.getElementById('booking-confirm-modal').style.display = 'none';
+      _bookingForm = null;
+    }
+
+    function filterBookings(status) {
+      var rows = document.querySelectorAll(".booking-status-form");
+      rows.forEach(function(form) {
+        var tr = form.closest("tr");
+        if (tr) {
+          var rowStatus = tr.getAttribute("data-status");
+          tr.style.display = (status === "all" || rowStatus === status) ? "" : "none";
+        }
+      });
+      document.querySelectorAll(".booking-tab").forEach(function(tab) { tab.classList.remove("active"); });
+      event.currentTarget.classList.add("active");
+    }
+
+    // Auto-open WhatsApp after status change
+    window.addEventListener('load', function() {
+      var waLink = document.querySelector('a[href*="wa.me"]');
+      if (waLink) {
+        setTimeout(function() { window.open(waLink.href, '_blank'); }, 1200);
+      }
+    });
   </script>
+
+  <!-- Modale de confirmation -->
+  <div id="booking-confirm-modal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;">
+    <div style="background:#fff;border-radius:12px;padding:32px;max-width:420px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.2);text-align:center;">
+      <div style="font-size:40px;margin-bottom:12px;">⚠️</div>
+      <p id="booking-confirm-text" style="font-size:15px;color:#333;line-height:1.6;margin:0 0 24px;"></p>
+      <div style="display:flex;gap:12px;justify-content:center;">
+        <button onclick="bookingConfirmYes()" style="padding:10px 28px;background:#25D366;color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">Oui</button>
+        <button onclick="bookingConfirmNo()" style="padding:10px 28px;background:#e5e7eb;color:#333;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;">Annuler</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>

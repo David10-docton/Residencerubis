@@ -2,6 +2,7 @@
 $page_title = "Réservation";
 $meta_desc = "Réservez votre appartement meublé à Cotonou, Bénin. Tarifs, types, surfaces et formulaire de réservation.";
 require_once 'includes/config.php';
+require_once 'includes/db.php';
 require_once 'includes/security.php';
 require_once 'includes/email.php';
 
@@ -44,10 +45,11 @@ if (($_POST['booking_submit'] ?? '') === '1') {
     $fin_annee   = (int)($_POST['fin_annee']   ?? 0);
     $email       = trim($_POST['email'] ?? '');
     $client_name = trim($_POST['client_name'] ?? '');
+    $phone       = trim($_POST['phone'] ?? '');
 
     $dates_valides = $debut_jour && $debut_mois && $debut_annee && $fin_jour && $fin_mois && $fin_annee
       && $email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)
-      && $client_name !== ''
+      && $client_name !== '' && $phone !== ''
       && checkdate($debut_mois, $debut_jour, $debut_annee)
       && checkdate($fin_mois, $fin_jour, $fin_annee);
 
@@ -62,7 +64,7 @@ if (($_POST['booking_submit'] ?? '') === '1') {
       } else {
         $client_id = !empty($_SESSION['client_id']) ? (int)$_SESSION['client_id'] : null;
         $saved = (file_exists(__DIR__ . '/includes/db.php') && function_exists('db_save_booking'))
-          ? db_save_booking($apartment['name'], $client_name, $check_in, $check_out, $email, $client_id)
+          ? db_save_booking($apartment['name'], $client_name, $check_in, $check_out, $email, $client_id, $phone)
           : false;
         $nights = max(1, (int)((strtotime($check_out) - strtotime($check_in)) / 86400));
         $price_n = (int)preg_replace('/\D/', '', $apartment['price']);
@@ -89,10 +91,11 @@ if (($_POST['booking_submit'] ?? '') === '1') {
           'check_out'   => $check_out,
           'nights'      => $nights,
           'total'       => $total_f,
+          'phone'       => $phone,
         ]);
 
         if ($saved !== false) {
-          $booking_success = 'Votre demande est bien enregistrée. Un email de confirmation vous a été envoyé à ' . htmlspecialchars($email) . '.';
+          $booking_success = 'Votre demande de réservation a bien été enregistrée. Vous recevrez un email de confirmation à ' . htmlspecialchars($email) . '.';
         } else {
           $booking_error = 'Une erreur est survenue lors de l\'enregistrement. Veuillez réessayer ou nous contacter directement.';
         }
@@ -241,6 +244,10 @@ require_once 'includes/header.php';
         <div class="produit-email-row">
           <label>Email</label>
           <input type="email" name="email" placeholder="votre@email.com" value="<?= htmlspecialchars($_SESSION['client_email'] ?? '') ?>" required>
+        </div>
+        <div class="produit-email-row">
+          <label>Téléphone / WhatsApp</label>
+          <input type="tel" name="phone" placeholder="(+229) XX XX XX XX" value="<?= htmlspecialchars($_SESSION['client_phone'] ?? '') ?>" required>
         </div>
         <button type="submit" class="produit-reserver"><i class="ph ph-fill ph-calendar-check" aria-hidden="true"></i> Réserver</button>
       </form>

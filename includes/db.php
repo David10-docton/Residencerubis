@@ -86,6 +86,7 @@ function db_run_migrations($conn) {
   if (!isset($booking_columns['client_id'])) $conn->query("ALTER TABLE bookings ADD COLUMN client_id INT NULL AFTER email");
   if (!isset($booking_columns['status'])) $conn->query("ALTER TABLE bookings ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'pending' AFTER client_id");
   if (!isset($booking_columns['name'])) $conn->query("ALTER TABLE bookings ADD COLUMN name VARCHAR(150) NOT NULL DEFAULT '' AFTER apartment");
+  if (!isset($booking_columns['phone'])) $conn->query("ALTER TABLE bookings ADD COLUMN phone VARCHAR(30) NOT NULL DEFAULT '' AFTER email");
 
   $conn->query("CREATE TABLE IF NOT EXISTS contact_messages (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -271,12 +272,13 @@ function db_get_all_prices() {
   return $rows;
 }
 
-function db_save_booking($apartment, $name, $check_in, $check_out, $email, $client_id = null) {
+function db_save_booking($apartment, $name, $check_in, $check_out, $email, $client_id = null, $phone = '') {
   $conn = db_connect();
   if (!$conn) return false;
   $status = 'pending';
-  $stmt = $conn->prepare("INSERT INTO bookings (apartment, name, check_in, check_out, email, client_id, status) VALUES (?, ?, ?, ?, ?, ?, ?)");
-  $stmt->bind_param('sssssis', $apartment, $name, $check_in, $check_out, $email, $client_id, $status);
+  $phone = trim($phone);
+  $stmt = $conn->prepare("INSERT INTO bookings (apartment, name, check_in, check_out, email, phone, client_id, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+  $stmt->bind_param('ssssssis', $apartment, $name, $check_in, $check_out, $email, $phone, $client_id, $status);
   return $stmt->execute();
 }
 
@@ -300,7 +302,7 @@ function db_save_contact_message($name, $email, $message) {
 function db_get_bookings() {
   $conn = db_connect();
   if (!$conn) return [];
-  $res = $conn->query("SELECT id, apartment, name, check_in, check_out, email, client_id, status, created_at FROM bookings ORDER BY created_at DESC");
+  $res = $conn->query("SELECT id, apartment, name, check_in, check_out, email, phone, client_id, status, created_at FROM bookings ORDER BY created_at DESC");
   $rows = [];
   while ($row = $res->fetch_assoc()) $rows[] = $row;
   return $rows;
@@ -309,7 +311,7 @@ function db_get_bookings() {
 function db_get_bookings_for_user($client_id, $email) {
   $conn = db_connect();
   if (!$conn) return [];
-  $stmt = $conn->prepare("SELECT id, apartment, name, check_in, check_out, email, status, created_at FROM bookings WHERE client_id = ? OR (client_id IS NULL AND email = ?) ORDER BY check_in DESC, created_at DESC");
+  $stmt = $conn->prepare("SELECT id, apartment, name, check_in, check_out, email, phone, status, created_at FROM bookings WHERE client_id = ? OR (client_id IS NULL AND email = ?) ORDER BY check_in DESC, created_at DESC");
   $stmt->bind_param('is', $client_id, $email);
   $stmt->execute();
   $rows = [];

@@ -23,8 +23,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_submit'])) {
     $email = trim($_POST['email'] ?? '');
     $apartment = trim($_POST['apartment'] ?? '');
     $client_name = trim($_POST['client_name'] ?? '');
+    $phone = trim($_POST['phone'] ?? '');
 
-    if ($check_in === '' || $check_out === '' || $email === '' || $apartment === '' || $client_name === '') {
+    if ($check_in === '' || $check_out === '' || $email === '' || $apartment === '' || $client_name === '' || $phone === '') {
       $booking_error = 'Veuillez remplir tous les champs du formulaire.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
       $booking_error = 'Adresse email invalide.';
@@ -34,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_submit'])) {
       $booking_error = 'Ces dates ne sont plus disponibles pour cet appartement. Choisissez un autre séjour ou contactez-nous.';
     } else {
       $client_id = !empty($_SESSION['client_id']) ? (int)$_SESSION['client_id'] : null;
-      $ok = db_save_booking($apartment, $client_name, $check_in, $check_out, $email, $client_id);
+      $ok = db_save_booking($apartment, $client_name, $check_in, $check_out, $email, $client_id, $phone);
 
       if ($ok) {
         $nights = max(1, (int)((strtotime($check_out) - strtotime($check_in)) / 86400));
@@ -66,9 +67,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_submit'])) {
           'check_out'   => $check_out,
           'nights'      => $nights,
           'total'       => $total_f,
+          'phone'       => $phone,
         ]);
 
-        $booking_success = 'Merci ! Votre demande de réservation a bien été enregistrée. Un email de confirmation vous a été envoyé à ' . htmlspecialchars($email) . '.';
+        $booking_success = 'Votre demande de réservation a bien été enregistrée. Vous recevrez un email de confirmation à ' . htmlspecialchars($email) . '.';
       } else {
         $booking_error = 'Une erreur est survenue lors de l\'enregistrement. Veuillez réessayer ou nous contacter directement.';
       }
@@ -133,6 +135,10 @@ require_once 'includes/header.php';
               <label>Email</label>
               <input type="email" name="email" placeholder="votre@email.com" value="<?= htmlspecialchars($_SESSION['client_email'] ?? '') ?>" required>
             </div>
+          </div>
+          <div class="form-group">
+            <label>Téléphone / WhatsApp</label>
+            <input type="tel" name="phone" placeholder="(+229) XX XX XX XX" value="<?= htmlspecialchars($_SESSION['client_phone'] ?? '') ?>" required>
           </div>
           <div class="form-group">
             <label>Appartement</label>

@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['contact_submit'])) {
               . "Nom : $name\n"
               . "Email : $email\n"
               . "Message :\n$message\n";
-        @mail($site_email, $subject, $body, 'From: ' . $site_email);
+        @mail('residencerubis4@gmail.com', $subject, $body, 'From: ' . $site_email);
         $contact_success = 'Merci ' . htmlspecialchars($name) . ' ! Votre message a bien été envoyé. Nous vous répondrons rapidement.';
       } else {
         $contact_error = 'Une erreur est survenue lors de l\'envoi. Veuillez réessayer.';
@@ -109,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['panier_submit'])) {
           send_cart_confirmation_to_client($lines_data, $email, $client_name_cart, $total);
 
           // Notification à l'admin
-          @mail($site_email, 'Réservations groupées - Résidence Rubis', $msg, 'From: ' . $site_email);
+          @mail('residencerubis4@gmail.com', 'Réservations groupées - Résidence Rubis', $msg, 'From: ' . $site_email);
           $json = ['ok' => true, 'message' => 'Votre demande a bien été envoyée. Un email de confirmation vous a été envoyé à ' . htmlspecialchars($email) . '.'];
         } else {
           $json['message'] = 'Une erreur est survenue lors de l\'envoi. Veuillez réessayer.';
