@@ -29,6 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['booking_submit'])) {
       $booking_error = 'Veuillez remplir tous les champs du formulaire.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
       $booking_error = 'Adresse email invalide.';
+    } elseif ($check_in < date('Y-m-d')) {
+      $booking_error = 'La date d\'arrivée ne peut pas être dans le passé.';
     } elseif ($check_out <= $check_in) {
       $booking_error = 'La date de départ doit être postérieure à la date d\'arrivée.';
     } elseif (!db_booking_is_available($apartment, $check_in, $check_out)) {
@@ -119,11 +121,11 @@ require_once 'includes/header.php';
           <div class="form-row">
             <div class="form-group">
               <label>Arrivée</label>
-              <input type="date" name="check_in" required>
+              <input type="date" name="check_in" min="<?= date('Y-m-d') ?>" required>
             </div>
             <div class="form-group">
               <label>Départ</label>
-              <input type="date" name="check_out" required>
+              <input type="date" name="check_out" min="<?= date('Y-m-d') ?>" required>
             </div>
           </div>
           <div class="form-row">

@@ -57,7 +57,9 @@ if (($_POST['booking_submit'] ?? '') === '1') {
       $check_in = sprintf('%04d-%02d-%02d', $debut_annee, $debut_mois, $debut_jour);
       $check_out = sprintf('%04d-%02d-%02d', $fin_annee, $fin_mois, $fin_jour);
 
-      if ($check_out <= $check_in) {
+      if ($check_in < date('Y-m-d')) {
+        $booking_error = 'La date d\'arrivée ne peut pas être dans le passé.';
+      } elseif ($check_out <= $check_in) {
         $booking_error = 'La date de départ doit être postérieure à la date d\'arrivée.';
       } elseif (!db_booking_is_available($apartment['name'], $check_in, $check_out)) {
         $booking_error = 'Ces dates ne sont plus disponibles pour cet appartement. Choisissez un autre séjour ou contactez-nous.';
@@ -66,35 +68,36 @@ if (($_POST['booking_submit'] ?? '') === '1') {
         $saved = (file_exists(__DIR__ . '/includes/db.php') && function_exists('db_save_booking'))
           ? db_save_booking($apartment['name'], $client_name, $check_in, $check_out, $email, $client_id, $phone)
           : false;
-        $nights = max(1, (int)((strtotime($check_out) - strtotime($check_in)) / 86400));
-        $price_n = (int)preg_replace('/\D/', '', $apartment['price']);
-        $total_f = $nights * $price_n;
-
-        // Email de confirmation au client
-        send_booking_confirmation_to_client([
-          'client_name'     => $client_name,
-          'email'           => $email,
-          'apartment'       => $apartment['name'],
-          'check_in'        => $check_in,
-          'check_out'       => $check_out,
-          'nights'          => $nights,
-          'price_per_night' => $apartment['price'],
-          'total'           => $total_f,
-        ]);
-
-        // Notification à l'admin
-        send_booking_notification_to_admin([
-          'client_name' => $client_name,
-          'email'       => $email,
-          'apartment'   => $apartment['name'],
-          'check_in'    => $check_in,
-          'check_out'   => $check_out,
-          'nights'      => $nights,
-          'total'       => $total_f,
-          'phone'       => $phone,
-        ]);
 
         if ($saved !== false) {
+          $nights = max(1, (int)((strtotime($check_out) - strtotime($check_in)) / 86400));
+          $price_n = (int)preg_replace('/\D/', '', $apartment['price']);
+          $total_f = $nights * $price_n;
+
+          // Email de confirmation au client
+          send_booking_confirmation_to_client([
+            'client_name'     => $client_name,
+            'email'           => $email,
+            'apartment'       => $apartment['name'],
+            'check_in'        => $check_in,
+            'check_out'       => $check_out,
+            'nights'          => $nights,
+            'price_per_night' => $apartment['price'],
+            'total'           => $total_f,
+          ]);
+
+          // Notification à l'admin
+          send_booking_notification_to_admin([
+            'client_name' => $client_name,
+            'email'       => $email,
+            'apartment'   => $apartment['name'],
+            'check_in'    => $check_in,
+            'check_out'   => $check_out,
+            'nights'      => $nights,
+            'total'       => $total_f,
+            'phone'       => $phone,
+          ]);
+
           $booking_success = 'Votre demande de réservation a bien été enregistrée. Vous recevrez un email de confirmation à ' . htmlspecialchars($email) . '.';
         } else {
           $booking_error = 'Une erreur est survenue lors de l\'enregistrement. Veuillez réessayer ou nous contacter directement.';

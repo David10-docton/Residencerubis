@@ -46,12 +46,12 @@ function send_branded_email($to, $subject, $html, $text = '', $replyTo = '') {
     $text = preg_replace('/\n{3,}/', "\n\n", $text);
   }
 
-  // Configuration SMTP — fallback durci pour InfinityFree
-  $smtp_host     = getenv('SMTP_HOST') ?: 'smtp.gmail.com';
-  $smtp_port     = (int)(getenv('SMTP_PORT') ?: 587);
-  $smtp_user     = getenv('SMTP_USER') ?: $site_email;
-  $smtp_pass     = getenv('SMTP_PASS') ?: 'mtzedodoghbfttpp';
-  $smtp_encrypt  = getenv('SMTP_ENCRYPTION') ?: 'tls';
+  // Configuration SMTP — env_get() lit le .env même si putenv() est désactivé
+  $smtp_host     = env_get('SMTP_HOST', 'smtp.gmail.com');
+  $smtp_port     = (int)env_get('SMTP_PORT', '465');
+  $smtp_user     = env_get('SMTP_USER', $site_email);
+  $smtp_pass     = str_replace(' ', '', env_get('SMTP_PASS', ''));
+  $smtp_encrypt  = env_get('SMTP_ENCRYPTION', 'ssl');
 
   // Si PHPMailer n'est pas disponible, fallback sur mail()
   if (!$has_phpmailer) {
@@ -63,48 +63,71 @@ function send_branded_email($to, $subject, $html, $text = '', $replyTo = '') {
     return @mail($to, $subject, $html, $headers);
   }
 
-  try {
-    $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
-
-    // Configuration SMTP
-    $mail->isSMTP();
-    $mail->Host       = $smtp_host;
-    $mail->SMTPAuth   = true;
-    $mail->Username   = $smtp_user;
-    $mail->Password   = $smtp_pass;
-    $mail->SMTPSecure = ($smtp_encrypt === 'ssl') ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
-    $mail->Port       = $smtp_port;
-    $mail->CharSet    = 'UTF-8';
-
-    // Expéditeur
-    $mail->setFrom($site_email, $site_name);
-    $mail->Sender = $site_email;
-    $mail->addAddress($to);
-
-    // Reply-To
-    $mail->addReplyTo($reply_addr, $site_name);
-
-    // Contenu
-    $mail->isHTML(true);
-    $mail->Subject = $subject;
-    $mail->Body    = $html;
-    $mail->AltBody = $text;
-
-    $mail->send();
-    return true;
-  } catch (\PHPMailer\PHPMailer\Exception $e) {
-    // Log l'erreur
-    error_log('[Résidence Rubis] Erreur SMTP à ' . $to . ' : ' . $e->getMessage());
-    // Fallback mail()
-    if (function_exists('mail')) {
-      $headers  = "MIME-Version: 1.0\r\n";
-      $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
-      $headers .= "From: {$site_name} <{$site_email}>\r\n";
-      $headers .= "Reply-To: {$reply_addr}\r\n";
-      return @mail($to, $subject, $html, $headers);
-    }
-    return false;
+  // Tenter l'envoi SMTP — avec fallback port 465/SSL si 587/TLS échoue
+  $ports_to_try = [];
+  if ($smtp_port == 587) {
+    $ports_to_try = [
+      ['port' => 587, 'secure' => \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS],
+      ['port' => 465, 'secure' => \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS],
+    ];
+  } else {
+    $ports_to_try = [
+      ['port' => $smtp_port, 'secure' => ($smtp_encrypt === 'ssl') ? \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS : \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS],
+    ];
   }
+
+  foreach ($ports_to_try as $attempt) {
+    try {
+      $mail = new \PHPMailer\PHPMailer\PHPMailer(true);
+
+      // Configuration SMTP
+      $mail->isSMTP();
+      $mail->Host       = $smtp_host;
+      $mail->SMTPAuth   = true;
+      $mail->Username   = $smtp_user;
+      $mail->Password   = $smtp_pass;
+      $mail->SMTPSecure = $attempt['secure'];
+      $mail->Port       = $attempt['port'];
+      $mail->CharSet    = 'UTF-8';
+
+      // Expéditeur
+      $mail->setFrom($site_email, $site_name);
+      $mail->Sender = $site_email;
+      $mail->addAddress($to);
+
+      // Reply-To
+      $mail->addReplyTo($reply_addr, $site_name);
+
+      // Contenu
+      $mail->isHTML(true);
+      $mail->Subject = $subject;
+      $mail->Body    = $html;
+      $mail->AltBody = $text;
+
+      $mail->send();
+      return true;
+    } catch (\PHPMailer\PHPMailer\Exception $e) {
+      error_log('[Résidence Rubis] Erreur SMTP port ' . $attempt['port'] . ' à ' . $to . ' : ' . $e->getMessage());
+      // Si le port 587 échoue, on tente 465 dans la boucle
+      continue;
+    }
+  }
+
+  // Dernier recours : fallback mail()
+  if (function_exists('mail')) {
+    $headers  = "MIME-Version: 1.0\r\n";
+    $headers .= "Content-Type: text/html; charset=UTF-8\r\n";
+    $headers .= "From: {$site_name} <{$site_email}>\r\n";
+    $headers .= "Reply-To: {$reply_addr}\r\n";
+    $result = @mail($to, $subject, $html, $headers);
+    if (!$result) {
+      error_log('[Résidence Rubis] mail() a échoué pour ' . $to);
+    }
+    return $result;
+  }
+
+  error_log('[Résidence Rubis] Aucun moyen d envoyer l email à ' . $to);
+  return false;
 }
 
 /**
@@ -221,13 +244,17 @@ function send_booking_notification_to_admin($data) {
   $total       = $data['total'] ?? 0;
   $phone       = $data['phone'] ?? '';
 
-  $admin_email = getenv('ADMIN_EMAIL') ?: 'residencerubis4@gmail.com';
+  $admin_email = env_get('ADMIN_EMAIL', 'residencerubis4@gmail.com');
   $date_in  = date('d/m/Y', strtotime($check_in));
   $date_out = date('d/m/Y', strtotime($check_out));
   $total_fmt = number_format($total, 0, ',', ' ');
 
-  $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-  $admin_url = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost') . '/admin/index.php?tab=requests';
+  $base_url = rtrim(env_get('SITE_URL', ''), '/');
+  if ($base_url === '') {
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $base_url = $scheme . '://' . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+  }
+  $admin_url = $base_url . '/admin/index.php?tab=requests';
 
   $title = '<h2 style="margin:0 0 8px;font-size:22px;color:#B85D3F;font-weight:700;">🔔 Nouvelle réservation</h2>';
   $greeting = '<p style="margin:0 0 20px;font-size:16px;color:#2C2C2C;">Un nouveau client vient de faire une demande de réservation :</p>';

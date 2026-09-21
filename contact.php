@@ -26,16 +26,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['contact_submit'])) {
       $contact_error = 'Veuillez remplir tous les champs du formulaire.';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
       $contact_error = 'Adresse email invalide.';
-    } else {
-      $ok = db_save_contact_message($name, $email, $message);
+    } else {        $ok = db_save_contact_message($name, $email, $message);
 
-      if ($ok) {
-        $subject = 'Nouveau message depuis le site - Résidence Rubis';
-        $body = "Nouveau message depuis le site :\n\n"
-              . "Nom : $name\n"
-              . "Email : $email\n"
-              . "Message :\n$message\n";
-        @mail('residencerubis4@gmail.com', $subject, $body, 'From: ' . $site_email);
+        if ($ok) {
+          $subject = 'Nouveau message depuis le site - Résidence Rubis';
+          $body_html = '<p><strong>Nouveau message depuis le site :</strong></p>'
+                . '<p><strong>Nom :</strong> ' . htmlspecialchars($name) . '</p>'
+                . '<p><strong>Email :</strong> ' . htmlspecialchars($email) . '</p>'
+                . '<p><strong>Message :</strong></p><p>' . nl2br(htmlspecialchars($message)) . '</p>';
+          send_branded_email('residencerubis4@gmail.com', $subject, $body_html, '', $email);
         $contact_success = 'Merci ' . htmlspecialchars($name) . ' ! Votre message a bien été envoyé. Nous vous répondrons rapidement.';
       } else {
         $contact_error = 'Une erreur est survenue lors de l\'envoi. Veuillez réessayer.';
@@ -109,7 +108,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['panier_submit'])) {
           send_cart_confirmation_to_client($lines_data, $email, $client_name_cart, $total);
 
           // Notification à l'admin
-          @mail('residencerubis4@gmail.com', 'Réservations groupées - Résidence Rubis', $msg, 'From: ' . $site_email);
+          $body_html = '<p><strong>Nouvelle réservation groupée depuis le site :</strong></p>'
+            . '<p>' . nl2br(htmlspecialchars($msg)) . '</p>';
+          send_branded_email('residencerubis4@gmail.com', 'Réservations groupées - Résidence Rubis', $body_html, '', $email);
           $json = ['ok' => true, 'message' => 'Votre demande a bien été envoyée. Un email de confirmation vous a été envoyé à ' . htmlspecialchars($email) . '.'];
         } else {
           $json['message'] = 'Une erreur est survenue lors de l\'envoi. Veuillez réessayer.';

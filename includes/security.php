@@ -32,10 +32,38 @@ function load_env_file($path) {
     if ($pos === false) continue;
     $key = trim(substr($line, 0, $pos));
     $value = trim(substr($line, $pos + 1));
-    if ($key === '' || getenv($key) !== false) continue;
-    putenv($key . '=' . $value);
+    if ($key === '') continue;
+    if (function_exists('putenv')) {
+      putenv($key . '=' . $value);
+    }
     $_ENV[$key] = $value;
   }
+}
+
+/**
+ * Lit une variable depuis le fichier .env — fonctionne même si putenv() est désactivé.
+ * Ordre : $_ENV → getenv() → lecture directe du .env → défaut.
+ */
+function env_get($key, $default = '') {
+  if (isset($_ENV[$key]) && $_ENV[$key] !== '') return $_ENV[$key];
+  $val = function_exists('getenv') ? getenv($key) : false;
+  if ($val !== false && $val !== '') return $val;
+  // Lecture directe du .env en dernier recours
+  $env_path = __DIR__ . '/../.env';
+  if (is_file($env_path)) {
+    $lines = file($env_path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    if ($lines) {
+      foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || $line[0] === '#') continue;
+        $pos = strpos($line, '=');
+        if ($pos === false) continue;
+        $k = trim(substr($line, 0, $pos));
+        if ($k === $key) return trim(substr($line, $pos + 1));
+      }
+    }
+  }
+  return $default;
 }
 
 /**

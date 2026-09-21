@@ -15,10 +15,10 @@ function db_connect() {
   // Identifiants MySQL. En local (WAMP) : valeurs par défaut ci-dessous.
   // En production (InfinityFree) : surchargez-les via le fichier .env
   // (DB_HOST, DB_USER, DB_PASS, DB_NAME) ou des variables d'environnement.
-  $host = getenv('DB_HOST') ?: 'localhost';
-  $user = getenv('DB_USER') ?: 'root';
-  $pass = getenv('DB_PASS') ?: '';
-  $db   = getenv('DB_NAME') ?: 'residencerubis';
+  $host = env_get('DB_HOST', 'localhost');
+  $user = env_get('DB_USER', 'root');
+  $pass = env_get('DB_PASS', '');
+  $db   = env_get('DB_NAME', 'residencerubis');
 
   $conn = @new mysqli($host, $user, $pass);
   if ($conn->connect_error) {
@@ -123,16 +123,18 @@ function db_run_migrations($conn) {
     excerpt TEXT NOT NULL,
     content LONGTEXT NOT NULL,
     video_url VARCHAR(500) NOT NULL DEFAULT '',
+    content_blocks LONGTEXT NULL,
     published TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
   )");
 
-  // Migration : ajouter la colonne video_url si elle n'existe pas.
+  // Migration : ajouter les colonnes manquantes.
   $bp_cols = [];
   $bp_res = @$conn->query("SHOW COLUMNS FROM blog_posts");
   if ($bp_res) while ($c = $bp_res->fetch_assoc()) $bp_cols[$c['Field']] = true;
   if (!isset($bp_cols['video_url'])) $conn->query("ALTER TABLE blog_posts ADD COLUMN video_url VARCHAR(500) NOT NULL DEFAULT '' AFTER content");
+  if (!isset($bp_cols['content_blocks'])) $conn->query("ALTER TABLE blog_posts ADD COLUMN content_blocks LONGTEXT NULL AFTER video_url");
 }
 
 function db_blog_seed() {
@@ -154,6 +156,7 @@ function db_blog_seed() {
       excerpt TEXT NOT NULL,
       content LONGTEXT NOT NULL,
       video_url VARCHAR(500) NOT NULL DEFAULT '',
+      content_blocks LONGTEXT NULL,
       published TINYINT(1) NOT NULL DEFAULT 0,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -415,7 +418,7 @@ function db_password_reset_consume($token, $password_hash) {
 function db_blog_get_all($published_only = false) {
   $conn = db_connect();
   if (!$conn) return [];
-  $sql = "SELECT id, title, subtitle, slug, image, excerpt, content, video_url, published, created_at, updated_at FROM blog_posts";
+  $sql = "SELECT id, title, subtitle, slug, image, excerpt, content, content_blocks, video_url, published, created_at, updated_at FROM blog_posts";
   if ($published_only) $sql .= " WHERE published = 1";
   $sql .= " ORDER BY created_at DESC";
   $res = @$conn->query($sql);
@@ -445,15 +448,16 @@ function db_blog_get_by_id($id) {
   return $res->fetch_assoc() ?: null;
 }
 
-function db_blog_save($id, $title, $subtitle, $slug, $image, $excerpt, $content, $published, $video_url = '') {
+function db_blog_save($id, $title, $subtitle, $slug, $image, $excerpt, $content, $published, $video_url = '', $content_blocks = '') {
   $conn = db_connect();
   if (!$conn) return false;
+  if ($content_blocks === null) $content_blocks = '';
   if ($id) {
-    $stmt = $conn->prepare("UPDATE blog_posts SET title=?, subtitle=?, slug=?, image=?, excerpt=?, content=?, video_url=?, published=? WHERE id=?");
-    $stmt->bind_param('sssssssii', $title, $subtitle, $slug, $image, $excerpt, $content, $video_url, $published, $id);
+    $stmt = $conn->prepare("UPDATE blog_posts SET title=?, subtitle=?, slug=?, image=?, excerpt=?, content=?, video_url=?, content_blocks=?, published=? WHERE id=?");
+    $stmt->bind_param('ssssssssii', $title, $subtitle, $slug, $image, $excerpt, $content, $video_url, $content_blocks, $published, $id);
   } else {
-    $stmt = $conn->prepare("INSERT INTO blog_posts (title, subtitle, slug, image, excerpt, content, video_url, published) VALUES (?,?,?,?,?,?,?,?)");
-    $stmt->bind_param('sssssssi', $title, $subtitle, $slug, $image, $excerpt, $content, $video_url, $published);
+    $stmt = $conn->prepare("INSERT INTO blog_posts (title, subtitle, slug, image, excerpt, content, video_url, content_blocks, published) VALUES (?,?,?,?,?,?,?,?,?)");
+    $stmt->bind_param('ssssssssi', $title, $subtitle, $slug, $image, $excerpt, $content, $video_url, $content_blocks, $published);
   }
   return $stmt->execute();
 }

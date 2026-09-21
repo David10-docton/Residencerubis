@@ -1,7 +1,7 @@
 <?php
 $site_name = "Résidence Rubis";
 $site_tagline = "Vous êtes ici chez vous";
-$site_email = "residencerubis26@gmail.com";
+$site_email = "residencerubis4@gmail.com";
 $site_phone = "(+229) 01 96 77 13 13";
 $site_address = "Cotonou, Bénin";
 $site_hours = "Lun - Sam : 9h00 - 13h00 & 14h00 - 18h00";

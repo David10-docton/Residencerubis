@@ -479,7 +479,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const checkOut = new Date(v.fin_annee, v.fin_mois - 1, v.fin_jour);
       const valid = checkIn.getDate() === v.debut_jour && checkIn.getMonth() === v.debut_mois - 1
         && checkOut.getDate() === v.fin_jour && checkOut.getMonth() === v.fin_mois - 1;
-      if (!valid || checkOut <= checkIn) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      if (!valid || checkIn < today || checkOut <= checkIn) {
         if (calc) calc.classList.remove('is-visible');
         return;
       }
@@ -633,7 +634,8 @@ document.addEventListener('DOMContentLoaded', () => {
           && checkOut.getDate() === g('fin_jour') && checkOut.getMonth() === g('fin_mois') - 1;
         // On n'enregistre dans le panier que si la demande sera réellement acceptée
         // par le serveur (mêmes validations qu'en PHP : dates réelles + email).
-        if (!datesOk || checkOut <= checkIn || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+        const todayCart = new Date(); todayCart.setHours(0,0,0,0);
+        if (!datesOk || checkIn < todayCart || checkOut <= checkIn || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
         const nights = Math.round((checkOut - checkIn) / 86400000);
         const iso = (d) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
         const items = readCart();

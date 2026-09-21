@@ -13,6 +13,12 @@ function redirect_with_message($msg, $type = 'success', $suffix = '') {
 
 // Protection CSRF : toute écriture doit porter un jeton valide.
 if (!csrf_verify()) {
+  $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
+  if ($is_ajax) {
+    header('Content-Type: application/json');
+    echo json_encode(['ok' => false, 'error' => 'Session expirée. Rafraîchissez la page et réessayez.']);
+    exit;
+  }
   redirect_with_message('Session expirée : veuillez réessayer.', 'error');
 }
 
@@ -25,7 +31,7 @@ $anchor = preg_replace('/[^a-z0-9\-]/', '', strtolower($_POST['anchor'] ?? ''));
 if ($anchor !== '' && $tab === '') $tab = '#' . $anchor;
 
 // Les actions blog n'ont pas besoin de section/item
-if (!in_array($action, ['blog_save', 'blog_delete'], true)) {
+if (!in_array($action, ['blog_save', 'blog_delete', 'blog_media_upload', 'blog_media_delete'], true)) {
   if ($section === '' || $item === '') {
     redirect_with_message('Paramètres manquants.', 'error', $tab);
   }
@@ -167,6 +173,62 @@ switch ($action) {
     redirect_with_message('Prix réinitialisé au tarif par défaut.', 'success', '?tab=prices');
     break;
 
+  case 'blog_media_upload':
+    /* --- Upload AJAX image uniquement --- */
+    $is_ajax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && $_SERVER['HTTP_X_REQUESTED_WITH'] === 'XMLHttpRequest';
+
+    if (empty($_FILES['blog_media_file']) || $_FILES['blog_media_file']['error'] === UPLOAD_ERR_NO_FILE) {
+      if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok' => false, 'error' => 'Veuillez sélectionner une image.']); exit; }
+      redirect_with_message('Veuillez sélectionner une image.', 'error', '?tab=blog');
+    }
+    $bfile = $_FILES['blog_media_file'];
+    if ($bfile['error'] !== UPLOAD_ERR_OK) {
+      $err_msgs = [
+        UPLOAD_ERR_INI_SIZE   => 'Image trop volumineuse. Maximum 10 Mo sur cet hébergeur.',
+        UPLOAD_ERR_FORM_SIZE  => 'Le fichier dépasse la limite du formulaire.',
+        UPLOAD_ERR_PARTIAL    => 'Le fichier n\'a été que partiellement uploadé.',
+        UPLOAD_ERR_NO_TMP_DIR => 'Dossier temporaire manquant côté serveur.',
+        UPLOAD_ERR_CANT_WRITE => 'Impossible d\'écrire le fichier sur le serveur.',
+      ];
+      $errMsg = $err_msgs[$bfile['error']] ?? ('Erreur lors de l\'envoi du fichier (code ' . $bfile['error'] . ').');
+      if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok' => false, 'error' => $errMsg]); exit; }
+      redirect_with_message($errMsg, 'error', '?tab=blog');
+    }
+    $allowed_images = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/gif' => 'gif', 'image/webp' => 'webp'];
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $bmime = $finfo->file($bfile['tmp_name']);
+    if (!isset($allowed_images[$bmime])) {
+      $msg = 'Format non autorisé. Utilisez JPG, PNG, GIF ou WEBP.';
+      if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok' => false, 'error' => $msg]); exit; }
+      redirect_with_message($msg, 'error', '?tab=blog');
+    }
+    if ($bfile['size'] > 10 * 1024 * 1024) {
+      $msg = 'Image trop lourde (maximum 10 Mo).';
+      if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok' => false, 'error' => $msg]); exit; }
+      redirect_with_message($msg, 'error', '?tab=blog');
+    }
+    $ext = $allowed_images[$bmime];
+    $upload_dir = __DIR__ . '/../uploads/blog/';
+    if (!is_dir($upload_dir)) {
+      mkdir($upload_dir, 0755, true);
+    }
+    $bfname = 'blog-img-' . time() . '-' . bin2hex(random_bytes(4)) . '.' . $ext;
+    $dest = $upload_dir . $bfname;
+    if (!move_uploaded_file($bfile['tmp_name'], $dest)) {
+      if ($is_ajax) { header('Content-Type: application/json'); echo json_encode(['ok' => false, 'error' => 'Impossible d\'enregistrer le fichier sur le serveur.']); exit; }
+      redirect_with_message('Impossible d\'enregistrer le fichier sur le serveur.', 'error', '?tab=blog');
+    }
+    $url = 'uploads/blog/' . $bfname;
+    if ($is_ajax) {
+      header('Content-Type: application/json');
+      echo json_encode(['ok' => true, 'url' => $url, 'type' => 'image']);
+      exit;
+    }
+    $_SESSION['blog_media_url'] = $url;
+    $_SESSION['blog_media_field'] = 'image';
+    redirect_with_message('Image téléchargée avec succès !', 'success', '?tab=blog');
+    break;
+
   case 'blog_save':
     $id = (int)($_POST['id'] ?? 0);
     $title = trim($_POST['title'] ?? '');
@@ -174,8 +236,24 @@ switch ($action) {
     $slug = strtolower(trim(preg_replace('/[^a-z0-9\-]/', '-', strtolower(trim($_POST['slug'] ?? ''))), '-'));
     $image = trim($_POST['image'] ?? '');
     $video_url = trim($_POST['video_url'] ?? '');
+    if (isset($_SESSION['blog_media_url'])) {
+      $media_field = $_SESSION['blog_media_field'] ?? 'image';
+      if ($media_field === 'image' || $media_field === 'video_url') {
+        if ($media_field === 'video_url') {
+          $video_url = $_SESSION['blog_media_url'];
+        } else {
+          $image = $_SESSION['blog_media_url'];
+        }
+      }
+      unset($_SESSION['blog_media_url'], $_SESSION['blog_media_field']);
+    }
     $excerpt = trim($_POST['excerpt'] ?? '');
     $content = $_POST['content'] ?? '';
+    $content_blocks = trim($_POST['content_blocks'] ?? '');
+    if ($content_blocks !== '') {
+      json_decode($content_blocks);
+      if (json_last_error() !== JSON_ERROR_NONE) $content_blocks = '';
+    }
     $published = (int)($_POST['published'] ?? 0);
 
     if ($title === '' || $slug === '' || $content === '') {
@@ -196,11 +274,21 @@ switch ($action) {
       }
     }
 
-    if (db_blog_save($id ?: null, $title, $subtitle, $slug, $image, $excerpt, $content, $published, $video_url)) {
+    if (db_blog_save($id ?: null, $title, $subtitle, $slug, $image, $excerpt, $content, $published, $video_url, $content_blocks)) {
       redirect_with_message($id ? 'Article mis à jour avec succès !' : 'Article créé avec succès !', 'success', '?tab=blog');
     } else {
       redirect_with_message('Une erreur est survenue lors de l\'enregistrement.', 'error', '?tab=blog');
     }
+    break;
+
+  case 'blog_media_delete':
+    $blog_del_type = $_POST['blog_media_type'] ?? 'image';
+    $blog_del_url = trim($_POST['blog_media_url'] ?? '');
+    if ($blog_del_url !== '' && strpos($blog_del_url, 'uploads/') === 0) {
+      $del_file = __DIR__ . '/../' . $blog_del_url;
+      if (is_file($del_file)) @unlink($del_file);
+    }
+    redirect_with_message('Fichier supprimé.', 'success', '?tab=blog');
     break;
 
   case 'blog_delete':
